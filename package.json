@@ -14,6 +14,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "precommit": "prettier --write . && git add -A .",
+    "import": "node stripe/import.js",
     "validate": "node stripe/validate-csv.js",
     "dry-run": "STRIPE_DRY_RUN=true node stripe/import.js",
     "backup": "node stripe/backup.js",
