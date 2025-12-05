@@ -26,10 +26,7 @@
       <div class="rm-modal__note" id="campModalNote"></div>
     </div>
     <div class="rm-modal__foot">
-      <button class="rm-btn" id="campModalAdd">Zum Warenkorb</button>
-      <button class="rm-btn-secondary" type="button" data-modal-close>
-        Abbrechen
-      </button>
+      <button class="rm-btn rm-pay" id="campModalAdd">Zum Warenkorb</button>
     </div>
   </div>
 </div>
@@ -175,6 +172,9 @@
   .rm-btn[disabled] {
     opacity: 0.4;
     cursor: not-allowed;
+  }
+  .rm-btn-big {
+    padding: 10px;
   }
 
   /* ======== МОДАЛЬНОЕ ОКНО ======== */
@@ -613,7 +613,7 @@
                 formatEUR(amount || 0) +
                 '</div>' +
                 '<div class="rm-col-btn">' +
-                '<button class="rm-btn" data-open="' +
+                '<button class="rm-btn rm-btn-big" data-open="' +
                 cKey +
                 '" ' +
                 (isFull ? 'disabled' : '') +

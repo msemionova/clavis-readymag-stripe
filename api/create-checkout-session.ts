@@ -90,20 +90,17 @@ export default async function handler(req, res) {
 
     const caps = new Map<string, CapData>();
 
-    items.forEach((it, idx) => {
+    items.forEach((it) => {
       const slot = it.slot;
       const productId = (it as any).productId || 'unknown';
-
       const key = `${productId}__${slot}`;
-
       const fullId = it.prices.fullPriceId;
-      const isDiscounted = idx > 0;
-      const chosenId = isDiscounted
-        ? it.prices.discPriceId
-        : it.prices.fullPriceId;
+      const discId = it.prices.discPriceId;
 
-      const fullEntry = cache.get(fullId);
-      const entry = fullEntry || cache.get(chosenId);
+      // Для лимитов нас не волнует, по какой цене продаём — берём любую, где есть метадата
+      const entry =
+        cache.get(fullId) || (discId ? cache.get(discId) : undefined);
+
       const meta = (entry?.metadata || {}) as any;
 
       const maxSeats = Number(meta.max_seats || 0);
@@ -136,79 +133,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // ========= Остальная твоя логика (line_items, summary) =========
-
-    const capFirst = (s?: string) =>
-      s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
-    // Stripe line_items с красивым названием и description
-    const line_items = items.map((it, idx) => {
-      const isDiscounted = idx > 0;
-      const chosenId = isDiscounted
-        ? it.prices.discPriceId
-        : it.prices.fullPriceId;
-
-      const cached = cache.get(chosenId);
-      if (!cached) {
-        throw new Error(`Price not in cache: ${chosenId}`);
-      }
-
-      const { amount, currency } = cached;
-
-      // крупный заголовок — оригинальное название курса
-      const courseTitle =
-        it.title || (it.camp_type ? `Camp ${capFirst(it.camp_type)}` : 'Camp');
-
-      const descParts: string[] = [];
-
-      if (it.childFirst || it.childLast) {
-        descParts.push(
-          `Kind: ${[it.childFirst, it.childLast].filter(Boolean).join(' ')}`
-        );
-      }
-
-      const periodLabel =
-        (it as any).periodLabel || (it as any).period_label || '';
-
-      if (periodLabel) {
-        descParts.push(`Zeitraum: ${periodLabel}`);
-      } else if (it.week_label || it.week) {
-        descParts.push(`Woche: ${it.week_label || `W${it.week}`}`);
-      }
-
-      const timeLabel = (it as any).timeLabel || (it as any).time_label || '';
-
-      if (timeLabel) {
-        descParts.push(`Zeit: ${timeLabel}`);
-      }
-
-      const description = descParts.join(' • ');
-
-      return {
-        quantity: 1,
-        price_data: {
-          currency,
-          unit_amount: amount,
-          product_data: {
-            name: courseTitle + (isDiscounted ? ' (−10%)' : ''),
-            description,
-            metadata: {
-              week: String(it.week),
-              week_label: it.week_label || '',
-              camp_type: it.camp_type || '',
-              slot: it.slot,
-              childFirst: it.childFirst,
-              childLast: it.childLast,
-              original_price_id: chosenId,
-              title: it.title || '',
-              period_label: periodLabel,
-              time_label: timeLabel,
-              product_id: (it as any).productId || '',
-            },
-          },
-        },
-      };
-    });
-
+    // === ГРУППИРУЕМ ПО ДЕТЯМ (нужно ДО line_items) ===
     function norm(s: string) {
       return (s || '').trim().replace(/\s+/g, ' ').toLowerCase();
     }
@@ -244,7 +169,170 @@ export default async function handler(req, res) {
       });
     }
 
+    const childKeys = Array.from(byChild.keys());
+    // const primaryChildKey = childKeys[0] || null; // если понадобится отличать "основного"
+    const siblingKeys = new Set(childKeys.slice(1)); // все, кроме первого — сиблинги
     const totalChildren = byChild.size;
+
+    // === ПОЛНЫЙ ДЕНЬ: минус X евро, если один ребёнок ===
+
+    // индекс -> размер скидки в центах
+    const fullDayDiscountPerIndex = new Map<number, number>();
+
+    if (totalChildren === 1) {
+      type DaySlotInfo = { morningIdx?: number; afternoonIdx?: number };
+      const dayMap = new Map<string, DaySlotInfo>();
+
+      items.forEach((it, idx) => {
+        const slot = it.slot;
+        if (slot !== 'morning' && slot !== 'afternoon') return;
+
+        // считаем, что "день" = week; при желании можно усложнить ключ
+        const dayKey = String(it.week);
+
+        const info = dayMap.get(dayKey) || {};
+        if (slot === 'morning') {
+          if (info.morningIdx == null) info.morningIdx = idx;
+        } else if (slot === 'afternoon') {
+          if (info.afternoonIdx == null) info.afternoonIdx = idx;
+        }
+        dayMap.set(dayKey, info);
+      });
+
+      // Для каждого дня, где есть и утро, и вторая половина, даём скидку на вторую половину дня
+      for (const [, info] of dayMap.entries()) {
+        if (info.morningIdx != null && info.afternoonIdx != null) {
+          const afternoonItem = items[info.afternoonIdx];
+
+          const fullEntry = cache.get(afternoonItem.prices.fullPriceId);
+          const meta = (fullEntry?.metadata || {}) as any;
+
+          // клиенты могут менять это число в Stripe (metadata.full_day_discount_eur)
+          const fullDayDiscountEur = Number(
+            meta.full_day_discount_eur || '100'
+          );
+          const discountCents = Math.round(fullDayDiscountEur * 100);
+
+          if (discountCents > 0) {
+            fullDayDiscountPerIndex.set(info.afternoonIdx, discountCents);
+          }
+        }
+      }
+    }
+
+    // ========= Остальная логика (line_items, summary) =========
+
+    const capFirst = (s?: string) =>
+      s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+
+    // Stripe line_items с красивым названием и description
+    const line_items = items.map((it, idx) => {
+      const childKey = `${norm(it.childFirst)}|${norm(it.childLast)}`;
+      const isSibling = siblingKeys.has(childKey);
+      const hasSiblingInCart = totalChildren >= 2;
+      const applySiblingDiscount = hasSiblingInCart && isSibling;
+
+      const fullEntry = cache.get(it.prices.fullPriceId);
+      if (!fullEntry) {
+        throw new Error(`Price not in cache: ${it.prices.fullPriceId}`);
+      }
+
+      const discEntry = it.prices.discPriceId
+        ? cache.get(it.prices.discPriceId)
+        : undefined;
+
+      let amount = fullEntry.amount;
+      const currency = fullEntry.currency;
+
+      // 1) скидка сиблингу: берём discPrice, если есть, иначе 0.9 от полной
+      if (applySiblingDiscount) {
+        if (discEntry) {
+          amount = discEntry.amount;
+        } else {
+          amount = Math.round(fullEntry.amount * 0.9);
+        }
+      }
+
+      // 2) скидка за полный день (только когда один ребёнок)
+      const hasFullDayDiscountHere =
+        totalChildren === 1 && fullDayDiscountPerIndex.has(idx);
+
+      if (hasFullDayDiscountHere) {
+        const discountCents = fullDayDiscountPerIndex.get(idx)!;
+        amount = Math.max(0, amount - discountCents);
+      }
+
+      // какой прайс считаем "базовым" для метадаты и вебхуков
+      const chosenBasePriceId =
+        applySiblingDiscount && it.prices.discPriceId
+          ? it.prices.discPriceId
+          : it.prices.fullPriceId;
+
+      const courseTitle =
+        it.title || (it.camp_type ? `Camp ${capFirst(it.camp_type)}` : 'Camp');
+
+      const labels: string[] = [];
+      if (applySiblingDiscount) labels.push('Geschwisterrabatt −10%');
+      if (hasFullDayDiscountHere) labels.push('Ganztagsrabatt');
+
+      const titleSuffix = labels.length ? ` (${labels.join(', ')})` : '';
+      const courseTitleFinal = courseTitle + titleSuffix;
+
+      const descParts: string[] = [];
+
+      if (it.childFirst || it.childLast) {
+        descParts.push(
+          `Kind: ${[it.childFirst, it.childLast].filter(Boolean).join(' ')}`
+        );
+      }
+
+      const periodLabel =
+        (it as any).periodLabel || (it as any).period_label || '';
+
+      if (periodLabel) {
+        descParts.push(`Zeitraum: ${periodLabel}`);
+      } else if (it.week_label || it.week) {
+        descParts.push(`Woche: ${it.week_label || `W${it.week}`}`);
+      }
+
+      const timeLabel = (it as any).timeLabel || (it as any).time_label || '';
+
+      if (timeLabel) {
+        descParts.push(`Zeit: ${timeLabel}`);
+      }
+
+      const description = descParts.join(' • ');
+
+      return {
+        quantity: 1,
+        price_data: {
+          currency,
+          unit_amount: amount,
+          product_data: {
+            name: courseTitleFinal,
+            description,
+            metadata: {
+              week: String(it.week),
+              week_label: it.week_label || '',
+              camp_type: it.camp_type || '',
+              slot: it.slot,
+              childFirst: it.childFirst,
+              childLast: it.childLast,
+              original_price_id: chosenBasePriceId,
+              title: it.title || '',
+              period_label: periodLabel,
+              time_label: timeLabel,
+              product_id: (it as any).productId || '',
+              discount_type: applySiblingDiscount
+                ? 'sibling_10'
+                : hasFullDayDiscountHere
+                ? 'full_day'
+                : 'none',
+            },
+          },
+        },
+      };
+    });
 
     const orderSummary = Array.from(byChild.values())
       .map((ch) => {
@@ -283,11 +371,9 @@ export default async function handler(req, res) {
     return res.json({ url: session.url });
   } catch (e: any) {
     console.error('create-checkout-session error', e);
-    return res
-      .status(500)
-      .json({
-        error: 'CHECKOUT_FAILED',
-        message: e?.message || 'Unknown error',
-      });
+    return res.status(500).json({
+      error: 'CHECKOUT_FAILED',
+      message: e?.message || 'Unknown error',
+    });
   }
 }
