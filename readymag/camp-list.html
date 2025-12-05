@@ -60,18 +60,16 @@
   /* заголовок группы (категории) + тонкая линия */
   .rm-group {
     width: 100%;
-    display: flex;
-    align-items: start;
+    display: grid;
+    grid-template-columns: 160px minmax(0, 1fr); /* фикс слева, гибко справа */
+    column-gap: 40px;
     border-top: 0.5px solid rgba(0, 0, 0, 1);
     padding-top: 14px;
   }
 
   .rm-group-header {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 4px;
     font-size: 12px;
+    margin-bottom: 4px;
   }
 
   .rm-camp-row-container {
@@ -80,7 +78,6 @@
   }
 
   .rm-group-label {
-    min-width: 140px;
     white-space: nowrap;
   }
 
@@ -440,6 +437,13 @@
         grid.innerHTML = '<div>Fehler beim Laden des Katalogs</div>';
       });
 
+    function parseStartMinutes(timeLabel) {
+      if (!timeLabel) return null;
+      var m = timeLabel.match(/(\d{2}):(\d{2})/); // ищем 09:30
+      if (!m) return null;
+      return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+    }
+
     function renderGrid(catalog) {
       courseIndex = {};
 
@@ -454,6 +458,23 @@
           groupOrder.push(gKey);
         }
         groups[gKey].push(item);
+      });
+
+      var ageOrder = ['8-11 Jahre', '10+ Jahre', '12-16 Jahre'];
+
+      groupOrder.sort(function (a, b) {
+        var ia = ageOrder.indexOf(a);
+        var ib = ageOrder.indexOf(b);
+
+        // оба не из списка — сортируем по алфавиту
+        if (ia === -1 && ib === -1) return a.localeCompare(b);
+        // только a не из списка — он идёт после
+        if (ia === -1) return 1;
+        // только b не из списка — он идёт после
+        if (ib === -1) return -1;
+
+        // оба в списке — по порядку из ageOrder
+        return ia - ib;
       });
 
       var html = groupOrder
@@ -483,6 +504,37 @@
             courseMap[cKey].variants.push(it);
           });
 
+          // сортируем курсы внутри одной age-группы:
+          // утренние раньше дневных/вечерних, внутри слота – по началу времени
+          courseOrder.sort(function (aKey, bKey) {
+            var aVariants = (courseMap[aKey].variants || [])
+              .slice()
+              .sort(sortVariants);
+            var bVariants = (courseMap[bKey].variants || [])
+              .slice()
+              .sort(sortVariants);
+
+            var aFirst = aVariants[0] || {};
+            var bFirst = bVariants[0] || {};
+
+            // сначала по slot (morning -> afternoon -> остальные)
+            var sa = slotOrder(aFirst.slot);
+            var sb = slotOrder(bFirst.slot);
+            if (sa !== sb) return sa - sb;
+
+            // затем по времени начала, если есть timeLabel
+            var ta = parseStartMinutes(aFirst.timeLabel);
+            var tb = parseStartMinutes(bFirst.timeLabel);
+            if (ta != null && tb != null && ta !== tb) {
+              return ta - tb;
+            }
+
+            // если время одинаковое или не распарсилось — можно по алфавиту
+            return (courseMap[aKey].title || '').localeCompare(
+              courseMap[bKey].title || ''
+            );
+          });
+
           var rows = courseOrder
             .map(function (cKey) {
               var course = courseMap[cKey];
@@ -492,7 +544,7 @@
               if (course.readymagPage) {
                 // тут подставь базовый урл своего проекта в Readymag
                 href =
-                  'https://my.readymag.com/edit/5961069/preview/' +
+                  'https://readymag.website/u612815371/5961069/' +
                   course.readymagPage +
                   '/';
               }

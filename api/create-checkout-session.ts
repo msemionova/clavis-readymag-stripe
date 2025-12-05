@@ -5,6 +5,7 @@ export default async function handler(req, res) {
   const ALLOWED_ORIGINS = [
     'https://my.readymag.com',
     'https://readymag.com',
+    'https://readymag.website',
   ];
 
   const origin = req.headers.origin as string | undefined;
@@ -76,7 +77,7 @@ export default async function handler(req, res) {
           currency: pr.currency,
           metadata: (pr.metadata || {}) as Record<string, any>,
         });
-      }),
+      })
     );
 
     // ========= ПРОВЕРКА МЕСТ ПО СЛОТУ (productId + slot) =========
@@ -155,16 +156,13 @@ export default async function handler(req, res) {
 
       // крупный заголовок — оригинальное название курса
       const courseTitle =
-        it.title ||
-        (it.camp_type ? `Camp ${capFirst(it.camp_type)}` : 'Camp');
+        it.title || (it.camp_type ? `Camp ${capFirst(it.camp_type)}` : 'Camp');
 
       const descParts: string[] = [];
 
       if (it.childFirst || it.childLast) {
         descParts.push(
-          `Kind: ${[it.childFirst, it.childLast]
-            .filter(Boolean)
-            .join(' ')}`,
+          `Kind: ${[it.childFirst, it.childLast].filter(Boolean).join(' ')}`
         );
       }
 
@@ -177,8 +175,7 @@ export default async function handler(req, res) {
         descParts.push(`Woche: ${it.week_label || `W${it.week}`}`);
       }
 
-      const timeLabel =
-        (it as any).timeLabel || (it as any).time_label || '';
+      const timeLabel = (it as any).timeLabel || (it as any).time_label || '';
 
       if (timeLabel) {
         descParts.push(`Zeit: ${timeLabel}`);
@@ -288,6 +285,9 @@ export default async function handler(req, res) {
     console.error('create-checkout-session error', e);
     return res
       .status(500)
-      .json({ error: 'CHECKOUT_FAILED', message: e?.message || 'Unknown error' });
+      .json({
+        error: 'CHECKOUT_FAILED',
+        message: e?.message || 'Unknown error',
+      });
   }
 }

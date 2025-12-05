@@ -7,6 +7,7 @@ export default async function handler(req, res) {
   const ALLOWED_ORIGINS = [
     'https://my.readymag.com',
     'https://readymag.com',
+    'https://readymag.website',
   ];
 
   const origin = req.headers.origin as string | undefined;
@@ -44,7 +45,10 @@ export default async function handler(req, res) {
       const base = {
         productId: p.id,
         title: p.name,
-        image: p.images && p.images.length > 0 ? p.images[0] : (meta.image_url || null),
+        image:
+          p.images && p.images.length > 0
+            ? p.images[0]
+            : meta.image_url || null,
 
         ageLabel: meta.age_label || '',
         periodLabel: meta.period_label || '',
@@ -54,7 +58,7 @@ export default async function handler(req, res) {
         disciplineKey: meta.discipline_key || '',
         disciplineLabelDe: meta.discipline_label_de || '',
         disciplineLabelEn: meta.discipline_label_en || '',
-        readymagPage: meta.readymag_page || ''
+        readymagPage: meta.readymag_page || '',
       };
 
       byProduct[p.id] = {

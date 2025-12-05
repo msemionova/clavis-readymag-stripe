@@ -14,6 +14,7 @@ export default async function handler(req, res) {
   const ALLOWED_ORIGINS = [
     'https://my.readymag.com',
     'https://readymag.com',
+    'https://readymag.website',
   ];
 
   const origin = req.headers.origin as string | undefined;
@@ -38,7 +39,7 @@ export default async function handler(req, res) {
     event = stripe.webhooks.constructEvent(
       buf,
       sig,
-      process.env.STRIPE_WEBHOOK_SECRET!,
+      process.env.STRIPE_WEBHOOK_SECRET!
     );
   } catch (err: any) {
     return res.status(400).send(`Webhook Error: ${err.message}`);
@@ -128,8 +129,8 @@ export default async function handler(req, res) {
                 ...(p.metadata || {}),
                 booked_seats: String(newBooked),
               },
-            }),
-          ),
+            })
+          )
         );
       }
     } catch (err) {
