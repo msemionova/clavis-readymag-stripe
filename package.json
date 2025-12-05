@@ -3,14 +3,22 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "csv-parser": "^3.2.0",
+    "csv-writer": "^1.6.0",
+    "dotenv": "^17.2.3",
     "stripe": "^16.12.0"
   },
   "scripts": {
     "dev": "node",
-    "start": "node",
+    "start": "node stripe/import.js",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "precommit": "prettier --write . && git add -A ."
+    "precommit": "prettier --write . && git add -A .",
+    "validate": "node stripe/validate-csv.js",
+    "dry-run": "STRIPE_DRY_RUN=true node stripe/import.js",
+    "backup": "node stripe/backup.js",
+    "backup:list": "node stripe/backup.js list",
+    "backup:restore": "node stripe/backup.js restore"
   },
   "version": "1.0.0",
   "description": "",

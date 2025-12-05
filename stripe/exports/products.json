@@ -1,0 +1,73 @@
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "prod_TSnYxvtxCLUhqL",
+      "object": "product",
+      "active": true,
+      "attributes": [],
+      "created": 1763722387,
+      "default_price": "price_1SVrxgLjKvWJHXgLU2R3eOum",
+      "description": null,
+      "images": [
+        "https://files.stripe.com/links/MDB8YWNjdF8xU1ZUVVdMakt2V0pIWGdMfGZsX3Rlc3RfdTlGN1prb1NHdXFYYmlYNFhObWVBSHhh00yE9zFODF"
+      ],
+      "livemode": false,
+      "marketing_features": [],
+      "metadata": {
+        "age_label": "8–11 Jahre",
+        "discipline_key": "drawing",
+        "discipline_label_de": "Zeichnung",
+        "discipline_label_en": "Drawing",
+        "period_label": "02 – 06 Februar",
+        "readymag_page": "manga_storytelling",
+        "season": "winter_2026",
+        "week_label": "Woche 1"
+      },
+      "name": "Winter 2026 Manga&Comics: Storytelling Gruppe 10+",
+      "package_dimensions": null,
+      "shippable": null,
+      "statement_descriptor": null,
+      "tax_code": null,
+      "type": "service",
+      "unit_label": null,
+      "updated": 1764940162,
+      "url": null
+    },
+    {
+      "id": "prod_TSnYmL234Imt8L",
+      "object": "product",
+      "active": true,
+      "attributes": [],
+      "created": 1763722350,
+      "default_price": "price_1SVrx5LjKvWJHXgLLGaXFk2t",
+      "description": null,
+      "images": [
+        "https://files.stripe.com/links/MDB8YWNjdF8xU1ZUVVdMakt2V0pIWGdMfGZsX3Rlc3RfRFVrNzJkT2VlN3FpdUpRSVR4TExMa1JH00DACnFhyp"
+      ],
+      "livemode": false,
+      "marketing_features": [],
+      "metadata": {
+        "age_label": "8–11 Jahre",
+        "discipline_key": "fashion_design",
+        "discipline_label_de": "Fashion Design",
+        "discipline_label_en": "Fashion Design",
+        "period_label": "02 – 06 Februar",
+        "readymag_page": "fashion_design",
+        "season": "winter_2026",
+        "week_label": "Woche 1"
+      },
+      "name": "Winter 2026 Fashion Design: Moodboards & Styling Gruppe 10+",
+      "package_dimensions": null,
+      "shippable": null,
+      "statement_descriptor": null,
+      "tax_code": null,
+      "type": "service",
+      "unit_label": null,
+      "updated": 1764940179,
+      "url": null
+    }
+  ],
+  "has_more": false,
+  "url": "/v1/products"
+}
