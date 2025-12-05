@@ -1,5 +1,5 @@
 {
-  "name": "my-readymag-stripe",
+  "name": "clavis-readymag-stripe",
   "private": true,
   "type": "module",
   "dependencies": {
@@ -7,7 +7,10 @@
   },
   "scripts": {
     "dev": "node",
-    "start": "node"
+    "start": "node",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "precommit": "prettier --write . && git add -A ."
   },
   "version": "1.0.0",
   "description": "",

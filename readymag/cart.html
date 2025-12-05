@@ -1,0 +1,423 @@
+<button class="rm-cart-fab" id="cartFab">
+  Warenkorb
+  <span class="rm-cart-count" id="cartCount">0</span>
+</button>
+
+<aside class="rm-drawer" id="cartDrawer">
+  <div class="rm-d-head">
+    <div style="font-weight: 700">Warenkorb</div>
+    <button class="rm-x" id="closeDrawer">✕</button>
+  </div>
+
+  <div class="rm-d-body">
+    <div id="cartList"></div>
+
+    <div class="rm-d-extra">
+      <div class="rm-total">
+        <span>Gesamt</span>
+        <span id="totalEUR">€0.00</span>
+      </div>
+
+      <div class="rm-hint">E-mail</div>
+      <input class="rm-input" id="parentEmail" placeholder="parent@email.com" />
+
+      <button class="rm-btn rm-pay" id="payBtn">Zur Zahlung fortfahren</button>
+
+      <div class="rm-hint">
+        Der erste Camp ist zum vollen Preis, die restlichen Campe im Warenkorb
+        sind 10% reduziert.
+      </div>
+    </div>
+  </div>
+</aside>
+
+<style>
+  :root {
+    --card-border: #e8e8e8;
+    --accent: #111;
+    --accent-contrast: #fff;
+  }
+
+  * {
+    font-family: custom_167382, -apple-system, system-ui, BlinkMacSystemFont,
+      Segoe UI, Ubuntu, Fira Sans, Roboto, Avenir Next, Helvetica Neue,
+      Helvetica, Arial, sans-serif;
+  }
+
+  .rm-cart-fab {
+    position: fixed;
+    top: 8px;
+    right: 20px;
+    z-index: 40;
+    background: #fff;
+    color: #000;
+    padding: 4px 14px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    cursor: pointer;
+    border: 0;
+    border-radius: 999px;
+    font-size: 12px;
+  }
+  .rm-cart-fab:hover {
+    background: #000;
+    color: #fff;
+  }
+  .rm-cart-count {
+    background: #000;
+    color: #fff;
+    border-radius: 999px;
+    padding: 1px 6px;
+    font-size: 11px;
+  }
+
+  .rm-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: min(440px, 95vw);
+    height: 100vh;
+    background: #fff;
+    transform: translateX(100%);
+    transition: transform 0.35s ease;
+    z-index: 60;
+    overflow: hidden;
+  }
+  .rm-drawer.open {
+    transform: translateX(0);
+  }
+
+  .rm-d-head {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    padding: 16px 18px;
+    box-sizing: border-box;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .rm-d-body {
+    position: absolute;
+    top: 60px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 16px 18px 20px;
+    box-sizing: border-box;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .rm-d-extra {
+    border-top: 1px solid #eee;
+    padding-top: 12px;
+    display: grid;
+    gap: 10px;
+  }
+
+  .rm-d-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px dashed #eee;
+  }
+  .rm-d-row:last-child {
+    border-bottom: 0;
+  }
+
+  .rm-d-title {
+    font-weight: 600;
+  }
+  .rm-d-sub {
+    color: #666;
+    font-size: 13px;
+    margin-top: 4px;
+  }
+
+  .rm-hint {
+    color: #666;
+    font-size: 12px;
+  }
+
+  .rm-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 700;
+  }
+
+  .rm-pay {
+    width: 100%;
+  }
+
+  .rm-x {
+    background: #eee;
+    border: 0;
+    padding: 6px 8px;
+    cursor: pointer;
+    border-radius: 0;
+  }
+  .rm-input {
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    width: 100%;
+  }
+</style>
+
+<script>
+  // ===== General CartStore / CartBus =====
+  (function () {
+    if (window.CartStore) return;
+
+    var Bus = new EventTarget();
+
+    var Store = {
+      items: [],
+      email: '',
+      listeners: [],
+      subscribe: function (fn) {
+        this.listeners.push(fn);
+        fn(this);
+      },
+      notify: function () {
+        var self = this;
+        this.listeners.forEach(function (fn) {
+          fn(self);
+        });
+      },
+      add: function (item) {
+        this.items.push(item);
+        this.persist();
+        this.notify();
+      },
+      remove: function (index) {
+        this.items.splice(index, 1);
+        this.persist();
+        this.notify();
+      },
+      clear: function () {
+        this.items = [];
+        this.persist();
+        this.notify();
+      },
+      setEmail: function (v) {
+        this.email = v;
+        this.persist();
+        this.notify();
+      },
+      totalCents: function () {
+        return this.items.reduce(function (sum, it, i) {
+          var factor = i > 0 ? 0.9 : 1;
+          return sum + Math.round(it.amount * factor);
+        }, 0);
+      },
+      persist: function () {
+        try {
+          localStorage.setItem(
+            'camp_cart_v1',
+            JSON.stringify({
+              items: this.items,
+              email: this.email,
+            })
+          );
+        } catch (e) {}
+      },
+    };
+
+    try {
+      var saved = JSON.parse(localStorage.getItem('camp_cart_v1') || 'null');
+      if (saved && Array.isArray(saved.items)) {
+        Store.items = saved.items;
+        Store.email = saved.email || '';
+      }
+    } catch (e) {}
+
+    window.CartStore = Store;
+    window.CartBus = Bus;
+  })();
+
+  // CLEANUP
+  (function () {
+    try {
+      var params = new URLSearchParams(window.location.search);
+      if (params.get('paid') === '1' && window.CartStore) {
+        window.CartStore.clear();
+
+        // убираем ?paid=1 из URL, чтобы при обновлении не чистить снова
+        params.delete('paid');
+        var rest = params.toString();
+        var newUrl = window.location.pathname + (rest ? '?' + rest : '');
+        window.history.replaceState({}, '', newUrl);
+      }
+    } catch (e) {}
+  })();
+
+  // ===== Warenkorb =====
+  (function () {
+    var API_BASE = 'https://my-readymag-stripe.vercel.app'; // Should point to the PROD Vercel deployed app
+
+    var drawer = document.getElementById('cartDrawer');
+    var cartList = document.getElementById('cartList');
+    var totalEUR = document.getElementById('totalEUR');
+    var parentEmail = document.getElementById('parentEmail');
+    var payBtn = document.getElementById('payBtn');
+    var cartCountEl = document.getElementById('cartCount');
+    var fab = document.getElementById('cartFab');
+
+    if (
+      !drawer ||
+      !cartList ||
+      !totalEUR ||
+      !parentEmail ||
+      !payBtn ||
+      !cartCountEl ||
+      !fab
+    ) {
+      console.warn('Warenkorb-Widget: Einige Elemente fehlen');
+      return;
+    }
+
+    function formatEUR(cents) {
+      return '€' + (cents / 100).toFixed(2);
+    }
+
+    fab.addEventListener('click', function () {
+      drawer.classList.add('open');
+    });
+    document
+      .getElementById('closeDrawer')
+      .addEventListener('click', function () {
+        drawer.classList.remove('open');
+      });
+
+    window.CartBus.addEventListener('cart:open', function () {
+      drawer.classList.add('open');
+    });
+
+    window.CartStore.subscribe(function (state) {
+      cartCountEl.textContent = String(state.items.length);
+
+      if (!state.items.length) {
+        cartList.innerHTML =
+          '<div class="rm-hint">Der Warenkorb ist leer</div>';
+        totalEUR.textContent = '€0.00';
+        return;
+      }
+
+      var sum = 0;
+      cartList.innerHTML = state.items
+        .map(function (it, i) {
+          var isDisc = i > 0;
+          var shown = isDisc ? Math.round(it.amount * 0.9) : it.amount;
+          sum += shown;
+          return (
+            '' +
+            '<div class="rm-d-row">' +
+            '<div>' +
+            '<div class="rm-d-title">' +
+            it.label +
+            (isDisc ? ' <span style="color:#16a34a">−10%</span>' : '') +
+            '</div>' +
+            '<div class="rm-d-sub">Kind: ' +
+            it.childFirst +
+            ' ' +
+            it.childLast +
+            '</div>' +
+            '</div>' +
+            '<div>' +
+            '<div style="text-align:right; font-weight:700">' +
+            formatEUR(shown) +
+            '</div>' +
+            '<div style="text-align:right; margin-top:6px">' +
+            '<button class="rm-x" data-remove="' +
+            i +
+            '">Löschen</button>' +
+            '</div>' +
+            '</div>' +
+            '</div>'
+          );
+        })
+        .join('');
+
+      totalEUR.textContent = formatEUR(sum);
+
+      cartList.querySelectorAll('[data-remove]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var idx = +btn.getAttribute('data-remove');
+          window.CartStore.remove(idx);
+        });
+      });
+    });
+
+    // чекаут
+    payBtn.addEventListener('click', function () {
+      var state = window.CartStore;
+      if (!state.items.length) {
+        alert('Der Einkaufswagen ist leer');
+        return;
+      }
+      var email = (parentEmail.value || '').trim();
+      if (!email) {
+        alert('Geben Sie Ihre E-Mail-Adresse');
+        return;
+      }
+
+      state.setEmail(email);
+
+      payBtn.disabled = true;
+      payBtn.textContent = 'Checkout wird erstellt…';
+
+      fetch(API_BASE + '/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email,
+          items: state.items,
+        }),
+      })
+        .then(function (r) {
+          return r.json();
+        })
+        .then(function (data) {
+          if (!data.url)
+            throw new Error('Es wurde keine Checkout-URL zurückgegeben.');
+          window.location.href = data.url;
+        })
+        .catch(function (err) {
+          console.error(err);
+          alert('Die Zahlung konnte nicht erstellt werden.');
+          payBtn.disabled = false;
+          payBtn.textContent = 'Zur Zahlung weitergehen';
+        });
+    });
+
+    // === close drawer when clicking outside ===
+    document.addEventListener('click', function (e) {
+      // если drawer не открыт — ничего не делаем
+      if (!drawer.classList.contains('open')) return;
+
+      // если клик был внутри drawer → игнорируем
+      if (drawer.contains(e.target)) return;
+
+      // если клик был по кнопке открытия → игнорируем
+      if (e.target.closest('#cartFab')) return;
+
+      if (e.target.closest('[data-remove]')) {
+        return;
+      }
+
+      // закрываем
+      drawer.classList.remove('open');
+    });
+  })();
+</script>
