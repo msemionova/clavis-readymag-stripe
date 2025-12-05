@@ -1,3 +1,4 @@
+<div id="rmSeasonTabs" class="rm-season-tabs"></div>
 <div id="camps-grid" class="rm-camps-grid"></div>
 
 <!-- ГЛОБАЛЬНАЯ МОДАЛКА ДЛЯ ВВОДА РЕБЁНКА -->
@@ -295,6 +296,38 @@
     font-size: 14px;
     border-radius: 0;
   }
+
+  .rm-season-tabs {
+    max-width: 1200px;
+    margin: 0 auto 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .rm-season-tab {
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1px solid #000;
+    background: #fff;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  .rm-season-tab.is-active {
+    background: #000;
+    color: #fff;
+  }
+
+  .rm-empty {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 24px 32px;
+    border: 1px dashed rgba(0, 0, 0, 0.3);
+    text-align: center;
+    font-size: 14px;
+    line-height: 1.5;
+  }
 </style>
 
 <script>
@@ -376,6 +409,34 @@
     var grid = document.getElementById('camps-grid');
     if (!grid) return;
 
+    var seasonTabs = document.getElementById('rmSeasonTabs');
+
+    // Если страница-обзор — оставь null.
+    // Если это страница конкретного курса — поставь ключ readymag_page из Stripe.
+    var RM_PAGE_KEY = null; // для overview
+    // var RM_PAGE_KEY = 'fashion_design'; // для страницы Fashion Design
+
+    // все кэмпы с бэка
+    var ALL_CATALOG = [];
+    // текущий выбранный сезон
+    var ACTIVE_SEASON = null;
+
+    // конфиг сезонов, которые хотим показывать
+    // можно добавить/удалить ключи по мере надобности
+    var SEASONS_CONFIG = [
+      { key: 'winter_2026', label: 'Winter 2026' },
+      { key: 'spring_2026', label: 'Frühling 2026' },
+      { key: 'summer_2026', label: 'Sommer 2026' },
+      { key: 'autumn_2027', label: 'Herbst 2026' },
+    ];
+
+    // какой сезон показывать по умолчанию (на главной можно просто один оставить)
+    var DEFAULT_SEASON = 'winter_2026';
+
+    // включены ли табы сезонов (на overview-странице) —
+    // на детальных страницах курса можно выключить
+    var ENABLE_SEASON_TABS = true;
+
     // элементы модалки
     var modal = document.getElementById('campModal');
     var modalTitle = document.getElementById('campModalTitle');
@@ -410,10 +471,96 @@
       return sa - sb;
     }
 
-    // Если страница-обзор — оставь null.
-    // Если это страница конкретного курса — поставь ключ readymag_page из Stripe.
-    var RM_PAGE_KEY = null; // для overview
-    // var RM_PAGE_KEY = 'fashion_design'; // для страницы Fashion Design
+    function getSeasonLabel(seasonKey) {
+      if (!seasonKey) return '';
+      var match =
+        SEASONS_CONFIG.find(function (s) {
+          return s.key === seasonKey;
+        }) || null;
+      if (match) return match.label;
+      // fallback: winter_2026 -> "winter 2026"
+      return String(seasonKey).replace(/_/g, ' ');
+    }
+
+    function getFilteredCatalogForSeason() {
+      var catalog = ALL_CATALOG.slice();
+
+      if (ACTIVE_SEASON) {
+        catalog = catalog.filter(function (item) {
+          return item.season === ACTIVE_SEASON;
+        });
+      }
+
+      return catalog;
+    }
+
+    function renderCurrentSeason() {
+      var catalog = getFilteredCatalogForSeason();
+
+      if (!catalog || !catalog.length) {
+        var label = getSeasonLabel(ACTIVE_SEASON);
+        grid.innerHTML =
+          '<div class="rm-empty">Bald finden Sie hier unsere Camps für ' +
+          (label || 'diese Saison') +
+          '.</div>';
+        return;
+      }
+
+      renderGrid(catalog);
+    }
+
+    function initSeasonTabs() {
+      if (!seasonTabs || !ENABLE_SEASON_TABS) return;
+
+      // показываем все сезоны из конфига, даже если по ним ещё нет кэмпов
+      var tabs = SEASONS_CONFIG.slice();
+
+      if (!tabs.length) {
+        seasonTabs.style.display = 'none';
+        return;
+      }
+
+      // выбираем активный сезон:
+      // 1) DEFAULT_SEASON, если он есть в конфиге
+      // 2) иначе — первый из списка
+      if (!ACTIVE_SEASON) {
+        var hasDefault = tabs.some(function (s) {
+          return s.key === DEFAULT_SEASON;
+        });
+
+        ACTIVE_SEASON = hasDefault ? DEFAULT_SEASON : tabs[0].key;
+      }
+
+      seasonTabs.innerHTML = tabs
+        .map(function (s) {
+          return (
+            '<button class="rm-season-tab" data-season="' +
+            s.key +
+            '">' +
+            s.label +
+            '</button>'
+          );
+        })
+        .join('');
+
+      function updateTabUI() {
+        seasonTabs.querySelectorAll('[data-season]').forEach(function (btn) {
+          var k = btn.getAttribute('data-season');
+          if (k === ACTIVE_SEASON) btn.classList.add('is-active');
+          else btn.classList.remove('is-active');
+        });
+      }
+
+      seasonTabs.querySelectorAll('[data-season]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          ACTIVE_SEASON = btn.getAttribute('data-season');
+          updateTabUI();
+          renderCurrentSeason();
+        });
+      });
+
+      updateTabUI();
+    }
 
     // загрузка каталога
     fetch(API_BASE + '/api/catalog', { mode: 'cors' })
@@ -421,15 +568,24 @@
         return r.json();
       })
       .then(function (raw) {
-        var catalog = raw.catalog || [];
+        ALL_CATALOG = raw.catalog || [];
 
+        // фильтр по конкретной Readymag-странице (как и раньше)
         if (RM_PAGE_KEY) {
-          catalog = catalog.filter(function (item) {
+          ALL_CATALOG = ALL_CATALOG.filter(function (item) {
             return item.readymagPage === RM_PAGE_KEY;
           });
         }
 
-        renderGrid(catalog);
+        // инициализируем табы сезонов (на overview)
+        if (!RM_PAGE_KEY && ENABLE_SEASON_TABS) {
+          initSeasonTabs();
+        } else if (DEFAULT_SEASON) {
+          // если табы отключены, но всё равно хотим показывать только один сезон
+          ACTIVE_SEASON = DEFAULT_SEASON;
+        }
+
+        renderCurrentSeason();
         setupModalHandlers();
       })
       .catch(function (err) {
