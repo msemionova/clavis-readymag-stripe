@@ -1,5 +1,8 @@
 <div id="rmSeasonTabs" class="rm-season-tabs"></div>
-<h2 id="rmSeasonTitle" class="rm-season-title"></h2>
+<div class="rm-season-title-wrapper">
+  <h2 id="rmSeasonTitle" class="rm-season-title"></h2>
+  <span id="rmSeasonYear" class="rm-season-year"></span>
+</div>
 <div id="camps-grid" class="rm-camps-grid"></div>
 
 <!-- ГЛОБАЛЬНАЯ МОДАЛКА ДЛЯ ВВОДА РЕБЁНКА -->
@@ -39,7 +42,7 @@
     --rm-text: #000;
     --rm-btn-bg: #000;
     --rm-btn-text: #fff;
-    --rm-season-bg: #f8c5f4;
+    --rm-season-bg: #f9c7ff;
     --rm-season-tab-hover-bg: #000;
     --rm-season-tab-hover-text: #fff;
   }
@@ -333,14 +336,29 @@
     line-height: 1.5;
   }
 
+  .rm-season-title-wrapper {
+    position: relative;
+    display: flex;
+    align-items: start;
+    justify-content: center;
+    left: 10px;
+    margin-bottom: 60px;
+  }
+
   /* Заголовок сезона внутри виджета */
   .rm-season-title {
     max-width: 1200px;
-    margin: 0 auto 12px;
-    font-size: 40px;
+    font-size: 34px;
     line-height: 1.1;
-    font-weight: 700;
+    font-weight: 500;
     text-align: center;
+  }
+
+  .rm-season-year {
+    position: relative;
+    top: 7px;
+    font-size: 10px;
+    font-weight: 400;
   }
 
   /* Табы – уже есть, добавим ховер по цветам сезона */
@@ -382,7 +400,6 @@
     display: inline-block;
     padding: 10px 24px;
     border-radius: 999px;
-    border: 1px solid #000;
     background: #000;
     color: #fff;
     font-size: 14px;
@@ -511,17 +528,22 @@
 
     var seasonTabs = document.getElementById('rmSeasonTabs');
 
-    // Если страница-обзор — оставь null.
-    // Если это страница конкретного курса — поставь ключ readymag_page из Stripe.
-    var RM_PAGE_KEY = null; // для overview
-    // var RM_PAGE_KEY = 'fashion_design'; // для страницы Fashion Design
+    var YEAR = '2026';
+    // какой сезон показывать по умолчанию (на главной можно просто один оставить)
+    var DEFAULT_SEASON = `winter_${YEAR}`;
 
+    // включены ли табы сезонов (на overview-странице) —
+    // на детальных страницах курса можно выключить
+    var ENABLE_SEASON_TABS = true;
     // все кэмпы с бэка
     var ALL_CATALOG = [];
     // текущий выбранный сезон
     var ACTIVE_SEASON = null;
 
-    var YEAR = '2026';
+    // Если страница-обзор — оставь null.
+    // Если это страница конкретного курса — поставь ключ readymag_page из Stripe.
+    var RM_PAGE_KEY = null; // для overview
+    // var RM_PAGE_KEY = 'fashion_design'; // для страницы Fashion Design
 
     // конфиг сезонов, которые хотим показывать
     // можно добавить/удалить ключи по мере надобност
@@ -530,7 +552,7 @@
         key: `winter_${YEAR}`,
         label: 'Winter',
         title: 'Winterferiencamps',
-        bg: '#f8c5f4',
+        bg: '#f9c7ff',
         tabHoverBg: '#000000',
         tabHoverText: '#f8c5f4',
         emptyImage: 'https://example.com/winter.jpg',
@@ -572,13 +594,6 @@
         emptyText: `Bald finden Sie hier die Angebote für die Herbstferien ${YEAR}.`,
       },
     ];
-
-    // какой сезон показывать по умолчанию (на главной можно просто один оставить)
-    var DEFAULT_SEASON = 'winter_2026';
-
-    // включены ли табы сезонов (на overview-странице) —
-    // на детальных страницах курса можно выключить
-    var ENABLE_SEASON_TABS = true;
 
     // элементы модалки
     var modal = document.getElementById('campModal');
@@ -739,11 +754,12 @@
     }
 
     var seasonTitleEl = document.getElementById('rmSeasonTitle');
+    var seasonYearEl = document.getElementById('rmSeasonYear');
 
     function applySeasonStyles(seasonKey) {
       var conf = getSeasonConfig(seasonKey) || {};
 
-      var bg = conf.bg || '#f8c5f4';
+      var bg = conf.bg || 'var(--rm-season-bg)';
       var tabHoverBg = conf.tabHoverBg || '#000000';
       var tabHoverText = conf.tabHoverText || '#ffffff';
 
@@ -759,6 +775,10 @@
 
       if (seasonTitleEl && conf.title) {
         seasonTitleEl.textContent = conf.title;
+      }
+
+      if (seasonYearEl) {
+        seasonYearEl.textContent = YEAR;
       }
     }
 
@@ -803,7 +823,10 @@
     function renderGrid(catalog) {
       courseIndex = {};
 
-      // Группируем сначала по дисциплине (категория слева)
+      var MAX_CAMPS = 8;
+      var remaining = MAX_CAMPS;
+
+      // Группируем по возрасту
       var groups = {};
       var groupOrder = [];
 
@@ -822,19 +845,16 @@
         var ia = ageOrder.indexOf(a);
         var ib = ageOrder.indexOf(b);
 
-        // оба не из списка — сортируем по алфавиту
         if (ia === -1 && ib === -1) return a.localeCompare(b);
-        // только a не из списка — он идёт после
         if (ia === -1) return 1;
-        // только b не из списка — он идёт после
         if (ib === -1) return -1;
-
-        // оба в списке — по порядку из ageOrder
         return ia - ib;
       });
 
       var html = groupOrder
         .map(function (groupKey) {
+          if (remaining <= 0) return '';
+
           var items = groups[groupKey];
 
           // внутри категории группируем по курсу (одноимённые)
@@ -860,8 +880,7 @@
             courseMap[cKey].variants.push(it);
           });
 
-          // сортируем курсы внутри одной age-группы:
-          // утренние раньше дневных/вечерних, внутри слота – по началу времени
+          // сортируем курсы внутри age-группы
           courseOrder.sort(function (aKey, bKey) {
             var aVariants = (courseMap[aKey].variants || [])
               .slice()
@@ -873,39 +892,44 @@
             var aFirst = aVariants[0] || {};
             var bFirst = bVariants[0] || {};
 
-            // сначала по slot (morning -> afternoon -> остальные)
             var sa = slotOrder(aFirst.slot);
             var sb = slotOrder(bFirst.slot);
             if (sa !== sb) return sa - sb;
 
-            // затем по времени начала, если есть timeLabel
             var ta = parseStartMinutes(aFirst.timeLabel);
             var tb = parseStartMinutes(bFirst.timeLabel);
             if (ta != null && tb != null && ta !== tb) {
               return ta - tb;
             }
 
-            // если время одинаковое или не распарсилось — можно по алфавиту
             return (courseMap[aKey].title || '').localeCompare(
               courseMap[bKey].title || ''
             );
           });
 
-          var rows = courseOrder
+          // ограничиваем количество курсов в этой группе
+          var limitedCourseOrder = courseOrder;
+          if (limitedCourseOrder.length > remaining) {
+            limitedCourseOrder = limitedCourseOrder.slice(0, remaining);
+          }
+          remaining -= limitedCourseOrder.length;
+
+          if (!limitedCourseOrder.length) return '';
+
+          // строим HTML только по limitedCourseOrder
+          var rows = limitedCourseOrder
             .map(function (cKey) {
               var course = courseMap[cKey];
               var variants = course.variants.slice().sort(sortVariants);
 
               var href = '';
               if (course.readymagPage) {
-                // тут подставь базовый урл своего проекта в Readymag
                 href =
                   'https://readymag.website/u612815371/5961069/' +
                   course.readymagPage +
                   '/';
               }
 
-              // далее, вместо прямого course.title:
               var titleHtml = href
                 ? '<a class="rm-course-link" href="' +
                   href +
@@ -927,15 +951,12 @@
                 if (v.timeLabel) byPeriod[key].times.push(v.timeLabel);
               });
 
-              // колонка с неделями (каждая неделя один раз)
               var dateHtml = periodOrder
                 .map(function (k) {
                   return byPeriod[k].label || '';
                 })
                 .join('<br>');
 
-              // колонка со временем:
-              // для каждой недели все её Zeiten построчно, группы недель тоже через <br>
               var timeHtml = periodOrder
                 .map(function (k) {
                   var g = byPeriod[k];
@@ -945,7 +966,6 @@
                 .join('<br>');
 
               var amount = variants[0] ? variants[0].amount : 0;
-
               var freeSeats =
                 variants[0] && typeof variants[0].freeSeats === 'number'
                   ? variants[0].freeSeats
@@ -980,6 +1000,8 @@
             })
             .join('');
 
+          if (!rows) return '';
+
           return (
             '<section class="rm-group">' +
             '<div class="rm-group-header">' +
@@ -995,7 +1017,31 @@
         })
         .join('');
 
-      grid.innerHTML = html;
+      if (!html) {
+        // на всякий случай fallback
+        grid.innerHTML =
+          '<div class="rm-empty">Keine Camps für diesen Zeitraum gefunden.</div>';
+        return;
+      }
+
+      var conf = getSeasonConfig(ACTIVE_SEASON) || {};
+      var gradientColor = conf.bg || 'var(--rm-season-bg)';
+
+      var wrapperHtml =
+        '<div class="rm-list-wrapper">' +
+        '<div class="rm-list-inner">' +
+        html +
+        '</div>' +
+        '<div class="rm-list-fade" ' +
+        'style="background: linear-gradient(to bottom, rgba(255,255,255,0), ' +
+        gradientColor +
+        ');"></div>' +
+        '</div>' +
+        '<div class="rm-all-link-wrap">' +
+        '<a class="rm-all-link" href="https://readymag.website/u612815371/5961069/camps">Alle Camps</a>' +
+        '</div>';
+
+      grid.innerHTML = wrapperHtml;
 
       // обработчик открытия модалки
       grid.querySelectorAll('[data-open]').forEach(function (btn) {
