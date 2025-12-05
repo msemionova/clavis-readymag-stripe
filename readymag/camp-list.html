@@ -1,4 +1,5 @@
 <div id="rmSeasonTabs" class="rm-season-tabs"></div>
+<h2 id="rmSeasonTitle" class="rm-season-title"></h2>
 <div id="camps-grid" class="rm-camps-grid"></div>
 
 <!-- ГЛОБАЛЬНАЯ МОДАЛКА ДЛЯ ВВОДА РЕБЁНКА -->
@@ -38,6 +39,9 @@
     --rm-text: #000;
     --rm-btn-bg: #000;
     --rm-btn-text: #fff;
+    --rm-season-bg: #f8c5f4;
+    --rm-season-tab-hover-bg: #000;
+    --rm-season-tab-hover-text: #fff;
   }
 
   /* общий шрифт */
@@ -201,13 +205,12 @@
     position: relative;
     background: #fff;
     color: #000;
-    border: 2px solid #000;
-    padding: 20px 24px;
+    padding: 38px 38px;
     box-sizing: border-box;
     max-width: 520px;
     width: 100%;
     z-index: 1;
-    border-radius: 0;
+    border-radius: 20px;
   }
 
   .rm-modal__head {
@@ -226,7 +229,7 @@
   .rm-modal__close {
     border: 1px solid #000;
     background: #fff;
-    border-radius: 0;
+    border-radius: 999px;
     padding: 4px 8px;
     cursor: pointer;
   }
@@ -235,7 +238,8 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    margin-bottom: 14px;
+    margin-bottom: 24px;
+    border-radius: 20px;
   }
 
   .rm-modal__row {
@@ -294,7 +298,7 @@
     color: #000;
     cursor: pointer;
     font-size: 14px;
-    border-radius: 0;
+    border-radius: 999px;
   }
 
   .rm-season-tabs {
@@ -327,6 +331,102 @@
     text-align: center;
     font-size: 14px;
     line-height: 1.5;
+  }
+
+  /* Заголовок сезона внутри виджета */
+  .rm-season-title {
+    max-width: 1200px;
+    margin: 0 auto 12px;
+    font-size: 40px;
+    line-height: 1.1;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  /* Табы – уже есть, добавим ховер по цветам сезона */
+  .rm-season-tab:hover {
+    background: var(--rm-season-tab-hover-bg);
+    color: var(--rm-season-tab-hover-text);
+  }
+
+  /* Обёртка списка + градиент */
+  .rm-list-wrapper {
+    position: relative;
+    max-width: 1200px;
+    margin: 0 auto;
+    max-height: 650px; /* чтобы влезало около 8 кэмпов */
+    overflow: hidden;
+  }
+
+  .rm-list-inner {
+    background: var(--rm-season-bg);
+  }
+
+  .rm-list-fade {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 80px;
+    pointer-events: none;
+  }
+
+  /* Кнопка "Все кэмпы" */
+  .rm-all-link-wrap {
+    max-width: 1200px;
+    margin: 24px auto 0;
+    text-align: center;
+  }
+
+  .rm-all-link {
+    display: inline-block;
+    padding: 10px 24px;
+    border-radius: 999px;
+    border: 1px solid #000;
+    background: #000;
+    color: #fff;
+    font-size: 14px;
+    text-decoration: none;
+  }
+  .rm-all-link:hover {
+    background: #fff;
+    color: #000;
+  }
+
+  /* Плейсхолдер для пустого сезона (с картинкой и текстом) */
+  .rm-empty-season {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 24px 32px;
+    background: var(--rm-season-bg);
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    gap: 32px;
+    align-items: center;
+  }
+  @media (max-width: 900px) {
+    .rm-empty-season {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .rm-empty-season__image img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .rm-empty-season__meta {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .rm-empty-season__dates {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .rm-empty-season__text {
+    margin-bottom: 8px;
   }
 </style>
 
@@ -421,13 +521,56 @@
     // текущий выбранный сезон
     var ACTIVE_SEASON = null;
 
+    var YEAR = '2026';
+
     // конфиг сезонов, которые хотим показывать
-    // можно добавить/удалить ключи по мере надобности
+    // можно добавить/удалить ключи по мере надобност
     var SEASONS_CONFIG = [
-      { key: 'winter_2026', label: 'Winter 2026' },
-      { key: 'spring_2026', label: 'Frühling 2026' },
-      { key: 'summer_2026', label: 'Sommer 2026' },
-      { key: 'autumn_2027', label: 'Herbst 2026' },
+      {
+        key: `winter_${YEAR}`,
+        label: 'Winter',
+        title: 'Winterferiencamps',
+        bg: '#f8c5f4',
+        tabHoverBg: '#000000',
+        tabHoverText: '#f8c5f4',
+        emptyImage: 'https://example.com/winter.jpg',
+        emptyDates: '02.02 – 06.02',
+        emptyText: `Unsere Winterferiencamps ${YEAR} sind bald hier buchbar.`,
+      },
+      {
+        key: `spring_${YEAR}`,
+        label: 'Frühling',
+        title: 'Frühlingsferiencamps',
+        bg: '#f4ffd9',
+        tabHoverBg: '#000000',
+        tabHoverText: '#f4ffd9',
+        emptyImage: 'https://example.com/spring.jpg',
+        emptyDates: '02.03 – 30.05',
+        emptyText: `Hier erscheinen bald die Camps für die Frühlingsferien ${YEAR}.`,
+      },
+      {
+        key: `summer_${YEAR}`,
+        label: 'Sommer',
+        title: 'Sommerferiencamps',
+        bg: '#ffe348',
+        tabHoverBg: '#000000',
+        tabHoverText: '#ffe348',
+        emptyImage: 'https://example.com/summer.jpg',
+        emptyDates: '01.06 – 13.08',
+        emptyText:
+          'In den Sommerferien verwandeln sich die Camps in Räume zum Ausprobieren und Gestalten.',
+      },
+      {
+        key: `autumn_${YEAR}`,
+        label: 'Herbst',
+        title: 'Herbstferiencamps',
+        bg: '#ffd9b0',
+        tabHoverBg: '#000000',
+        tabHoverText: '#ffd9b0',
+        emptyImage: 'https://example.com/autumn.jpg',
+        emptyDates: '01.09 – 19.11',
+        emptyText: `Bald finden Sie hier die Angebote für die Herbstferien ${YEAR}.`,
+      },
     ];
 
     // какой сезон показывать по умолчанию (на главной можно просто один оставить)
@@ -448,6 +591,14 @@
 
     var currentCourseKey = null;
     var courseIndex = {}; // courseKey -> { title, discipline, variants[] }
+
+    function getSeasonConfig(key) {
+      return (
+        SEASONS_CONFIG.find(function (s) {
+          return s.key === key;
+        }) || null
+      );
+    }
 
     function formatEUR(cents) {
       var euro = (cents / 100).toFixed(2).replace('.', ',');
@@ -496,16 +647,39 @@
 
     function renderCurrentSeason() {
       var catalog = getFilteredCatalogForSeason();
+      var conf = getSeasonConfig(ACTIVE_SEASON) || {};
 
       if (!catalog || !catalog.length) {
-        var label = getSeasonLabel(ACTIVE_SEASON);
+        // пустой сезон → показываем картинку и текст из конфига
+        applySeasonStyles(ACTIVE_SEASON);
+
         grid.innerHTML =
-          '<div class="rm-empty">Bald finden Sie hier unsere Camps für ' +
-          (label || 'diese Saison') +
-          '.</div>';
+          '<div class="rm-empty-season">' +
+          '<div class="rm-empty-season__image">' +
+          (conf.emptyImage
+            ? '<img src="' +
+              conf.emptyImage +
+              '" alt="' +
+              (conf.title || '') +
+              '">'
+            : '') +
+          '</div>' +
+          '<div class="rm-empty-season__meta">' +
+          (conf.emptyDates
+            ? '<div class="rm-empty-season__dates">' +
+              conf.emptyDates +
+              '</div>'
+            : '') +
+          (conf.emptyText
+            ? '<div class="rm-empty-season__text">' + conf.emptyText + '</div>'
+            : '') +
+          '</div>' +
+          '</div>';
         return;
       }
 
+      // есть кэмпы
+      applySeasonStyles(ACTIVE_SEASON);
       renderGrid(catalog);
     }
 
@@ -554,12 +728,38 @@
       seasonTabs.querySelectorAll('[data-season]').forEach(function (btn) {
         btn.addEventListener('click', function () {
           ACTIVE_SEASON = btn.getAttribute('data-season');
+          applySeasonStyles(ACTIVE_SEASON);
           updateTabUI();
           renderCurrentSeason();
         });
       });
 
+      applySeasonStyles(ACTIVE_SEASON);
       updateTabUI();
+    }
+
+    var seasonTitleEl = document.getElementById('rmSeasonTitle');
+
+    function applySeasonStyles(seasonKey) {
+      var conf = getSeasonConfig(seasonKey) || {};
+
+      var bg = conf.bg || '#f8c5f4';
+      var tabHoverBg = conf.tabHoverBg || '#000000';
+      var tabHoverText = conf.tabHoverText || '#ffffff';
+
+      document.documentElement.style.setProperty('--rm-season-bg', bg);
+      document.documentElement.style.setProperty(
+        '--rm-season-tab-hover-bg',
+        tabHoverBg
+      );
+      document.documentElement.style.setProperty(
+        '--rm-season-tab-hover-text',
+        tabHoverText
+      );
+
+      if (seasonTitleEl && conf.title) {
+        seasonTitleEl.textContent = conf.title;
+      }
     }
 
     // загрузка каталога
