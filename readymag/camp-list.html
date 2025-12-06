@@ -385,7 +385,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    height: 80px;
+    height: 180px;
     pointer-events: none;
   }
 
@@ -531,6 +531,8 @@
     var YEAR = '2026';
     // какой сезон показывать по умолчанию (на главной можно просто один оставить)
     var DEFAULT_SEASON = `winter_${YEAR}`;
+
+    var MAX_CAMPS = 8;
 
     // включены ли табы сезонов (на overview-странице) —
     // на детальных страницах курса можно выключить
@@ -823,8 +825,8 @@
     function renderGrid(catalog) {
       courseIndex = {};
 
-      var MAX_CAMPS = 8;
       var remaining = MAX_CAMPS;
+      var shouldShowFade = catalog.length > MAX_CAMPS;
 
       // Группируем по возрасту
       var groups = {};
@@ -1032,13 +1034,13 @@
         '<div class="rm-list-inner">' +
         html +
         '</div>' +
-        '<div class="rm-list-fade" ' +
+        `<div class="${shouldShowFade ? 'rm-list-fade' : ''}" ` +
         'style="background: linear-gradient(to bottom, rgba(255,255,255,0), ' +
         gradientColor +
         ');"></div>' +
         '</div>' +
         '<div class="rm-all-link-wrap">' +
-        '<a class="rm-all-link" href="https://readymag.website/u612815371/5961069/camps">Alle Camps</a>' +
+        '<a class="rm-all-link" href="https://readymag.website/u612815371/5961069/camps">Mehr anzeigen</a>' +
         '</div>';
 
       grid.innerHTML = wrapperHtml;
