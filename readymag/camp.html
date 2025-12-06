@@ -302,16 +302,6 @@
     color: #fff;
   }
 
-  .rm-empty {
-    max-width: 1200px;
-    margin: 40px auto;
-    padding: 24px 32px;
-    border: 1px dashed rgba(0, 0, 0, 0.3);
-    text-align: center;
-    font-size: 14px;
-    line-height: 1.5;
-  }
-
   .rm-season-title-wrapper {
     position: relative;
     display: flex;
@@ -384,57 +374,6 @@
   .rm-all-link:hover {
     background: #fff;
     color: #000;
-  }
-
-  /* Плейсхолдер для пустого сезона (с картинкой и текстом) */
-  .rm-empty-season {
-    border-top: 0.5px solid rgba(0, 0, 0, 1);
-    max-width: 1200px;
-    padding: 24px 32px;
-    background: var(--rm-season-bg);
-
-    /* Два ребенка равной ширины */
-    display: flex;
-    gap: 32px;
-    align-items: start; /* Чтобы дети были одинаковой высоты */
-  }
-
-  /* Первый ребенок - flex контейнер для своих двух детей */
-  .rm-empty-season > *:first-child,
-  .rm-empty-season > *:nth-child(2) {
-    flex: 0 0 25%;
-  }
-
-  @media (max-width: 900px) {
-    .rm-empty-season {
-      flex-direction: column;
-      gap: 24px;
-    }
-  }
-  .rm-empty-season__image {
-    max-width: 360px; /* регулируй размер */
-    width: 100%;
-    margin: 0 auto; /* центрирует в колонке */
-  }
-
-  .rm-empty-season__image img {
-    width: 100%;
-    height: auto;
-    display: block;
-    border-radius: 16px; /* смягчает края как в макете */
-  }
-
-  .rm-empty-season__meta {
-    font-size: 14px;
-    line-height: 1.5;
-  }
-  .rm-empty-season__dates {
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 8px;
-  }
-  .rm-empty-season__text {
-    margin-bottom: 8px;
   }
 </style>
 
