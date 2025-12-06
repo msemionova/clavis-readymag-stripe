@@ -37,23 +37,6 @@
 </div>
 
 <style>
-  :root {
-    --rm-gap: 32px;
-    --rm-text: #000;
-    --rm-btn-bg: #000;
-    --rm-btn-text: #fff;
-    --rm-season-bg: #f9c7ff;
-    --rm-season-tab-hover-bg: #000;
-    --rm-season-tab-hover-text: #fff;
-  }
-
-  /* общий шрифт */
-  * {
-    font-family: 'Aeroport', -apple-system, system-ui, BlinkMacSystemFont,
-      'Segoe UI', Ubuntu, 'Fira Sans', Roboto, 'Avenir Next', 'Helvetica Neue',
-      Helvetica, Arial, sans-serif;
-  }
-
   /* контейнер всего списка */
   .rm-camps-grid {
     max-width: 1200px;
@@ -84,13 +67,6 @@
 
   .rm-group-label {
     white-space: nowrap;
-  }
-
-  .rm-group-line {
-    flex: 1;
-    height: 1px;
-    background: #000;
-    opacity: 0.25;
   }
 
   .rm-camp-row {
@@ -315,7 +291,7 @@
   .rm-season-tab {
     padding: 6px 14px;
     border-radius: 999px;
-    border: 1px solid #000;
+    border: 0;
     background: #fff;
     font-size: 12px;
     cursor: pointer;
@@ -412,25 +388,40 @@
 
   /* Плейсхолдер для пустого сезона (с картинкой и текстом) */
   .rm-empty-season {
+    border-top: 0.5px solid rgba(0, 0, 0, 1);
     max-width: 1200px;
-    margin: 40px auto;
     padding: 24px 32px;
     background: var(--rm-season-bg);
-    display: grid;
-    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+
+    /* Два ребенка равной ширины */
+    display: flex;
     gap: 32px;
-    align-items: center;
+    align-items: start; /* Чтобы дети были одинаковой высоты */
   }
+
+  /* Первый ребенок - flex контейнер для своих двух детей */
+  .rm-empty-season > *:first-child,
+  .rm-empty-season > *:nth-child(2) {
+    flex: 0 0 25%;
+  }
+
   @media (max-width: 900px) {
     .rm-empty-season {
-      grid-template-columns: 1fr;
+      flex-direction: column;
+      gap: 24px;
     }
+  }
+  .rm-empty-season__image {
+    max-width: 360px; /* регулируй размер */
+    width: 100%;
+    margin: 0 auto; /* центрирует в колонке */
   }
 
   .rm-empty-season__image img {
     width: 100%;
     height: auto;
     display: block;
+    border-radius: 16px; /* смягчает края как в макете */
   }
 
   .rm-empty-season__meta {
@@ -556,8 +547,9 @@
         title: 'Winterferiencamps',
         bg: '#f9c7ff',
         tabHoverBg: '#000000',
-        tabHoverText: '#f8c5f4',
-        emptyImage: 'https://example.com/winter.jpg',
+        tabHoverText: '#f9c7ff',
+        emptyImage:
+          'https://i-p.rmcdn.net/691608e5a42add5705475928/5961069/image-5f626f2e-b2d9-41d9-b082-2283cd66f58a.png?e=webp&nll=true&cX=78&cY=3&cW=714&cH=809',
         emptyDates: '02.02 – 06.02',
         emptyText: `Unsere Winterferiencamps ${YEAR} sind bald hier buchbar.`,
       },
@@ -565,10 +557,11 @@
         key: `spring_${YEAR}`,
         label: 'Frühling',
         title: 'Frühlingsferiencamps',
-        bg: '#f4ffd9',
+        bg: '#00A554',
         tabHoverBg: '#000000',
-        tabHoverText: '#f4ffd9',
-        emptyImage: 'https://example.com/spring.jpg',
+        tabHoverText: '#00A554',
+        emptyImage:
+          'https://i-p.rmcdn.net/691608e5a42add5705475928/5961069/image-0d1c61d7-a39a-48c2-9296-b37391c16673.png?e=webp&nll=true',
         emptyDates: '02.03 – 30.05',
         emptyText: `Hier erscheinen bald die Camps für die Frühlingsferien ${YEAR}.`,
       },
@@ -576,10 +569,11 @@
         key: `summer_${YEAR}`,
         label: 'Sommer',
         title: 'Sommerferiencamps',
-        bg: '#ffe348',
+        bg: '#FFDB27',
         tabHoverBg: '#000000',
-        tabHoverText: '#ffe348',
-        emptyImage: 'https://example.com/summer.jpg',
+        tabHoverText: '#FFDB27',
+        emptyImage:
+          'https://i-p.rmcdn.net/691608e5a42add5705475928/5961069/image-7565f00b-9b0d-454f-ad93-90581d0d0521.png?e=webp&nll=true&cX=28.209119496855294&cY=0&cW=761.5817610062894&cH=1217',
         emptyDates: '01.06 – 13.08',
         emptyText:
           'In den Sommerferien verwandeln sich die Camps in Räume zum Ausprobieren und Gestalten.',
@@ -588,10 +582,11 @@
         key: `autumn_${YEAR}`,
         label: 'Herbst',
         title: 'Herbstferiencamps',
-        bg: '#ffd9b0',
+        bg: '#FF3B00',
         tabHoverBg: '#000000',
-        tabHoverText: '#ffd9b0',
-        emptyImage: 'https://example.com/autumn.jpg',
+        tabHoverText: '#FF3B00',
+        emptyImage:
+          'https://i-p.rmcdn.net/691608e5a42add5705475928/5961069/image-422ec24e-5319-43fb-952c-8b77bf9a9575.png?e=webp&nll=true&cX=0&cY=1&cW=518&cH=828',
         emptyDates: '01.09 – 19.11',
         emptyText: `Bald finden Sie hier die Angebote für die Herbstferien ${YEAR}.`,
       },
@@ -672,6 +667,11 @@
 
         grid.innerHTML =
           '<div class="rm-empty-season">' +
+          (conf.emptyDates
+            ? '<div class="rm-empty-season__dates">' +
+              conf.emptyDates +
+              '</div>'
+            : '') +
           '<div class="rm-empty-season__image">' +
           (conf.emptyImage
             ? '<img src="' +
@@ -681,16 +681,9 @@
               '">'
             : '') +
           '</div>' +
-          '<div class="rm-empty-season__meta">' +
-          (conf.emptyDates
-            ? '<div class="rm-empty-season__dates">' +
-              conf.emptyDates +
-              '</div>'
-            : '') +
           (conf.emptyText
             ? '<div class="rm-empty-season__text">' + conf.emptyText + '</div>'
             : '') +
-          '</div>' +
           '</div>';
         return;
       }
