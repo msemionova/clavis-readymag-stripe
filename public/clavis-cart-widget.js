@@ -221,7 +221,8 @@
 
           var labels = [];
           if (hasSiblingDiscount) labels.push('−10% Geschwisterrabatt');
-          if (hasFullDayDiscount) labels.push('−100 € Ganztagsrabatt');
+          if (hasFullDayDiscount)
+            labels.push(`−${FULL_DAY_DISCOUNT_EUR} € Ganztagsrabatt`);
 
           var labelHtml = it.label;
           if (labels.length) {
