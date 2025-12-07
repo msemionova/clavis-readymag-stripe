@@ -2,7 +2,6 @@
   --card-border: #e8e8e8;
   --accent: #111;
   --accent-contrast: #fff;
-
   --rm-gap: 32px;
   --rm-text: #000;
   --rm-btn-bg: #000;
@@ -13,9 +12,9 @@
 }
 
 * {
-  font-family: custom_167382, -apple-system, system-ui, BlinkMacSystemFont,
-    Segoe UI, Ubuntu, Fira Sans, Roboto, Avenir Next, Helvetica Neue, Helvetica,
-    Arial, sans-serif;
+  font-style: swap;
+  font-family: -apple-system, system-ui, BlinkMacSystemFont, Segoe UI, Ubuntu,
+    Fira Sans, Roboto, Avenir Next, Helvetica Neue, Helvetica, Arial, sans-serif;
 }
 
 .season-bg,

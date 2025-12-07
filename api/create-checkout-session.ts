@@ -349,7 +349,8 @@ export default async function handler(req, res) {
       .map((ch) => `${ch.first} ${ch.last}`)
       .join(', ');
 
-    const successUrl = `${process.env.SUCCESS_RETURN_URL}?paid=1&session_id={CHECKOUT_SESSION_ID}`;
+    const successUrl = `${process.env.RETURN_URL}?paid=1&session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = `${process.env.RETURN_URL}`;
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
@@ -365,7 +366,7 @@ export default async function handler(req, res) {
         },
       },
       success_url: successUrl,
-      cancel_url: `${process.env.SITE_URL}/cancelled`,
+      cancel_url: cancelUrl,
     });
 
     return res.json({ url: session.url });

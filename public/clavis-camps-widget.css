@@ -1,0 +1,389 @@
+/* контейнер всего списка */
+.rm-camps-grid {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* заголовок группы (категории) + тонкая линия */
+.rm-group {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr); /* фикс слева, гибко справа */
+  column-gap: 40px;
+  border-top: 0.5px solid rgba(0, 0, 0, 1);
+  padding-top: 14px;
+}
+
+.rm-group-header {
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.rm-camp-row-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.rm-group-label {
+  white-space: nowrap;
+}
+
+.rm-camp-row {
+  position: relative;
+  display: grid;
+  grid-template-columns:
+    minmax(0, 3fr) /* Titel */
+    minmax(0, 1.6fr) /* Zeitraum (Wochen) */
+    minmax(0, 1.4fr) /* Zeit (Uhrzeiten) */
+    minmax(0, 1fr) /* Preis */
+    auto; /* Button */
+  align-items: start;
+  column-gap: 40px;
+  padding-bottom: 40px;
+}
+.rm-camp-row:not(:last-child) {
+  border-bottom: 0.5px solid rgba(0, 0, 0, 1);
+}
+.rm-camp-row:not(:first-child) {
+  padding-top: 14px;
+}
+
+@media (max-width: 900px) {
+  .rm-camp-row {
+    grid-template-columns: 1fr;
+    row-gap: 6px;
+    padding: 16px 0;
+  }
+}
+
+.rm-col-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+.rm-col-title a.rm-course-link {
+  color: inherit;
+  text-decoration: none;
+}
+.rm-col-title a.rm-course-link:hover {
+  text-decoration: underline;
+}
+
+.rm-col-date,
+.rm-col-time {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.rm-col-price {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.rm-col-terms {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.rm-col-price {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.rm-col-btn {
+  text-align: right;
+}
+@media (max-width: 900px) {
+  .rm-col-btn {
+    text-align: left;
+    margin-top: 6px;
+  }
+}
+
+.rm-btn {
+  background: #fff;
+  color: #000;
+  padding: 4px 14px;
+  cursor: pointer;
+  border: 0;
+  border-radius: 999px;
+  font-size: 12px;
+}
+.rm-btn:hover {
+  background: #000;
+  color: #fff;
+}
+.rm-btn[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.rm-btn-big {
+  padding: 10px;
+}
+
+/* ======== МОДАЛЬНОЕ ОКНО ======== */
+.rm-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.rm-modal.open {
+  display: flex;
+}
+
+.rm-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.rm-modal__dialog {
+  position: relative;
+  background: #fff;
+  color: #000;
+  padding: 38px 38px;
+  box-sizing: border-box;
+  max-width: 520px;
+  width: 100%;
+  z-index: 1;
+  border-radius: 20px;
+}
+
+.rm-modal__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.rm-modal__title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.rm-modal__close {
+  border: 1px solid #000;
+  background: #fff;
+  border-radius: 999px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.rm-modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+  border-radius: 20px;
+}
+
+.rm-modal__row {
+  display: flex;
+  gap: 10px;
+}
+@media (max-width: 600px) {
+  .rm-modal__row {
+    flex-direction: column;
+  }
+}
+
+.rm-modal__field {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.rm-modal__field label {
+  font-size: 12px;
+  color: #555;
+}
+
+.rm-input,
+.rm-select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 0;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+.rm-input:focus,
+.rm-select:focus {
+  outline: none;
+  border-color: #000;
+}
+
+.rm-modal__note {
+  font-size: 12px;
+  color: #444;
+}
+
+.rm-modal__foot {
+  display: flex;
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+.rm-btn-secondary {
+  padding: 8px 18px;
+  border: 1px solid #000;
+  background: #fff;
+  color: #000;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 999px;
+}
+
+.rm-season-tabs {
+  max-width: 1200px;
+  margin: 0 auto 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.rm-season-tab {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 0;
+  background: #fff;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.rm-season-tab.is-active {
+  background: #000;
+  color: #fff;
+}
+
+.rm-season-title-wrapper {
+  position: relative;
+  display: flex;
+  align-items: start;
+  justify-content: center;
+  left: 10px;
+  margin-bottom: 60px;
+}
+
+/* Заголовок сезона внутри виджета */
+.rm-season-title {
+  max-width: 1200px;
+  font-size: 34px;
+  line-height: 1.1;
+  font-weight: 500;
+  text-align: center;
+}
+
+.rm-season-year {
+  position: relative;
+  top: 7px;
+  font-size: 10px;
+  font-weight: 400;
+}
+
+/* Табы – уже есть, добавим ховер по цветам сезона */
+.rm-season-tab:hover {
+  background: var(--rm-season-tab-hover-bg);
+  color: var(--rm-season-tab-hover-text);
+}
+
+/* Обёртка списка + градиент */
+.rm-list-wrapper {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+  max-height: 650px; /* чтобы влезало около 8 кэмпов */
+  overflow: hidden;
+}
+
+.rm-list-inner {
+  background: var(--rm-season-bg);
+}
+
+.rm-list-fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 180px;
+  pointer-events: none;
+}
+
+/* Кнопка "Все кэмпы" */
+.rm-all-link-wrap {
+  max-width: 1200px;
+  margin: 24px auto 0;
+  text-align: center;
+}
+
+.rm-all-link {
+  display: inline-block;
+  padding: 10px 24px;
+  border-radius: 999px;
+  background: #000;
+  color: #fff;
+  font-size: 14px;
+  text-decoration: none;
+}
+.rm-all-link:hover {
+  background: #fff;
+  color: #000;
+}
+
+/* Плейсхолдер для пустого сезона (с картинкой и текстом) */
+.rm-empty-season {
+  border-top: 0.5px solid rgba(0, 0, 0, 1);
+  max-width: 1200px;
+  padding: 24px 0;
+  background: var(--rm-season-bg);
+
+  /* Два ребенка равной ширины */
+  display: flex;
+  gap: 32px;
+  align-items: start; /* Чтобы дети были одинаковой высоты */
+}
+
+/* Первый ребенок - flex контейнер для своих двух детей */
+.rm-empty-season > *:first-child,
+.rm-empty-season > *:nth-child(2) {
+  flex: 0 0 25%;
+}
+
+@media (max-width: 900px) {
+  .rm-empty-season {
+    flex-direction: column;
+    gap: 24px;
+  }
+}
+.rm-empty-season__image {
+  max-width: 360px; /* регулируй размер */
+  width: 100%;
+  margin: 0 auto; /* центрирует в колонке */
+}
+
+.rm-empty-season__image img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 16px; /* смягчает края как в макете */
+}
+
+.rm-empty-season__meta {
+  font-size: 14px;
+  line-height: 1.5;
+}
+.rm-empty-season__dates {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.rm-empty-season__text {
+  margin-bottom: 8px;
+}
