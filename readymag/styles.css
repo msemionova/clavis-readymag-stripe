@@ -13,8 +13,9 @@
 
 * {
   font-style: swap;
-  font-family: -apple-system, system-ui, BlinkMacSystemFont, Segoe UI, Ubuntu,
-    Fira Sans, Roboto, Avenir Next, Helvetica Neue, Helvetica, Arial, sans-serif;
+  font-family: custom_167382, -apple-system, system-ui, BlinkMacSystemFont,
+    Segoe UI, Ubuntu, Fira Sans, Roboto, Avenir Next, Helvetica Neue, Helvetica,
+    Arial, sans-serif;
 }
 
 .season-bg,

@@ -1,11 +1,13 @@
 (function () {
-  // Ждём полной загрузки страницы, чтобы не мешать Readymag viewer'у рисовать первый экран
   function initCampListWidget() {
     var cfg = window.ClavisConfig || {};
     var YEAR = cfg.year || '2026';
     var DEFAULT_SEASON = cfg.defaultSeason || 'winter_' + YEAR;
     var MAX_CAMPS = typeof cfg.maxCamps === 'number' ? cfg.maxCamps : 8;
     var ENABLE_SEASON_TABS = cfg.enableSeasonTabs !== false;
+    var SHOW_TITLE = cfg.showTitle !== false;
+    var SHOW_BUTTON = cfg.showButton !== false;
+    var RM_PAGE_KEY = cfg.rmPageKey || null;
     var API_BASE = cfg.apiBase || 'https://clavis-readymag-stripe.vercel.app';
 
     var grid = document.getElementById('camps-grid');
@@ -17,9 +19,6 @@
     // все кэмпы с бэка
     var ALL_CATALOG = [];
     var ACTIVE_SEASON = null;
-
-    // если overview – null, если страница курса – ключ readymag_page
-    var RM_PAGE_KEY = null;
 
     var SEASONS_CONFIG = [
       {
@@ -61,7 +60,7 @@
           'https://i-p.rmcdn.net/691608e5a42add5705475928/5961069/image-7565f00b-9b0d-454f-ad93-90581d0d0521.png?e=webp&nll=true&cX=28.209119496855294&cY=0&cW=761.5817610062894&cH=1217',
         emptyDates: '01.06 – 13.08',
         emptyText:
-          'In den Sommerferien verwandeln sich die Camps in Räume zum Ausprobieren und Gestalten.',
+          'Die Sommerfereincamps verwandeln die Schulferien in einen Raum zum Ausprobieren und Gestalten. Jugendliche arbeiten projektbasiert und mit künstlerischen Praktiken, entdecken sich selbst, knüpfen Verbindungen zur Stadt und entwickeln visuelle Fähigkeiten. So erfahren sie Kunst als Teil des Lebens, der Stadt und des kulturellen Kontexts. ',
       },
       {
         key: 'autumn_' + YEAR,
@@ -149,10 +148,10 @@
         tabHoverText
       );
 
-      if (seasonTitleEl && conf.title) {
+      if (SHOW_TITLE && seasonTitleEl && conf.title) {
         seasonTitleEl.textContent = conf.title;
       }
-      if (seasonYearEl) {
+      if (SHOW_TITLE && seasonYearEl) {
         seasonYearEl.textContent = YEAR;
       }
     }
@@ -504,9 +503,11 @@
         gradientColor +
         ');"></div>' +
         '</div>' +
-        '<div class="rm-all-link-wrap">' +
-        '<a class="rm-all-link" href="https://readymag.website/u612815371/5961069/camps">Mehr anzeigen</a>' +
-        '</div>';
+        (SHOW_BUTTON
+          ? '<div class="rm-all-link-wrap">' +
+            '<a class="rm-all-link" href="https://readymag.website/u612815371/5961069/camps">Mehr anzeigen</a>' +
+            '</div>'
+          : '');
 
       grid.innerHTML = wrapperHtml;
 
