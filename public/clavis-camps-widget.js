@@ -9,6 +9,7 @@
     var SHOW_BUTTON = cfg.showButton !== false;
     var RM_PAGE_KEY = cfg.rmPageKey || null;
     var API_BASE = cfg.apiBase || 'https://clavis-readymag-stripe.vercel.app';
+    var SEASONS_CONFIG = cfg.seasonsConfig || [];
 
     var grid = document.getElementById('camps-grid');
     if (!grid) return;
@@ -19,66 +20,6 @@
     // все кэмпы с бэка
     var ALL_CATALOG = [];
     var ACTIVE_SEASON = null;
-
-    var SEASONS_CONFIG = [
-      {
-        key: 'winter_' + YEAR,
-        label: 'Winter',
-        title: 'Winterferiencamps',
-        bg: '#f9c7ff',
-        tabHoverBg: '#000000',
-        tabHoverText: '#f9c7ff',
-        emptyImage:
-          'https://i-p.rmcdn.net/691608e5a42add5705475928/5961069/image-5f626f2e-b2d9-41d9-b082-2283cd66f58a.png?e=webp&nll=true&cX=78&cY=3&cW=714&cH=809',
-        emptyDates: '02.02 – 06.02',
-        emptyText:
-          'Unsere Winterferiencamps ' + YEAR + ' sind bald hier buchbar.',
-      },
-      {
-        key: 'spring_' + YEAR,
-        label: 'Frühling',
-        title: 'Frühlingsferiencamps',
-        bg: '#00A554',
-        tabHoverBg: '#000000',
-        tabHoverText: '#00A554',
-        emptyImage:
-          'https://i-p.rmcdn.net/691608e5a42add5705475928/5961069/image-0d1c61d7-a39a-48c2-9296-b37391c16673.png?e=webp&nll=true',
-        emptyDates: '02.03 – 30.05',
-        emptyText:
-          'Hier erscheinen bald die Camps für die Frühlingsferien ' +
-          YEAR +
-          '.',
-      },
-      {
-        key: 'summer_' + YEAR,
-        label: 'Sommer',
-        title: 'Sommerferiencamps',
-        bg: '#FFDB27',
-        tabHoverBg: '#000000',
-        tabHoverText: '#FFDB27',
-        emptyImage:
-          'https://i-p.rmcdn.net/691608e5a42add5705475928/5961069/image-7565f00b-9b0d-454f-ad93-90581d0d0521.png?e=webp&nll=true&cX=28.209119496855294&cY=0&cW=761.5817610062894&cH=1217',
-        emptyDates: '01.06 – 13.08',
-        emptyText:
-          'Die Sommerfereincamps verwandeln die Schulferien in einen Raum zum Ausprobieren und Gestalten. Jugendliche arbeiten projektbasiert und mit künstlerischen Praktiken, entdecken sich selbst, knüpfen Verbindungen zur Stadt und entwickeln visuelle Fähigkeiten. So erfahren sie Kunst als Teil des Lebens, der Stadt und des kulturellen Kontexts. ',
-      },
-      {
-        key: 'autumn_' + YEAR,
-        label: 'Herbst',
-        title: 'Herbstferiencamps',
-        bg: '#FF3B00',
-        tabHoverBg: '#000000',
-        tabHoverText: '#FF3B00',
-        emptyImage:
-          'https://i-p.rmcdn.net/691608e5a42add5705475928/5961069/image-422ec24e-5319-43fb-952c-8b77bf9a9575.png?e=webp&nll=true&cX=0&cY=1&cW=518&cH=828',
-        emptyDates: '01.09 – 19.11',
-        emptyText:
-          'Bald finden Sie hier die Angebote für die Herbstferien ' +
-          YEAR +
-          '.',
-      },
-    ];
-
     var modal = document.getElementById('campModal');
     var modalTitle = document.getElementById('campModalTitle');
     var modalSelect = document.getElementById('campSlotSelect');
@@ -198,6 +139,16 @@
       renderGrid(catalog);
     }
 
+    function safeRender() {
+      renderCurrentSeason();
+
+      setTimeout(function () {
+        if (!grid.innerHTML.trim()) {
+          renderCurrentSeason();
+        }
+      }, 50);
+    }
+
     function initSeasonTabs() {
       if (!seasonTabs || !ENABLE_SEASON_TABS) return;
 
@@ -234,8 +185,10 @@
         var nodes = seasonTabs.querySelectorAll('[data-season]');
         for (var i = 0; i < nodes.length; i++) {
           var btn = nodes[i];
-          if (btn.getAttribute('data-season') === ACTIVE_SEASON)
-            btn.classList.add('is-active');
+          var seasonWithYear = btn.getAttribute('data-season');
+          var season = seasonWithYear.split('_')[0];
+          btn.classList.add(season);
+          if (seasonWithYear === ACTIVE_SEASON) btn.classList.add('is-active');
           else btn.classList.remove('is-active');
         }
       }
@@ -245,7 +198,7 @@
           ACTIVE_SEASON = btn.getAttribute('data-season');
           applySeasonStyles(ACTIVE_SEASON);
           updateTabUI();
-          renderCurrentSeason();
+          safeRender();
         });
       });
 
@@ -295,11 +248,11 @@
           ACTIVE_SEASON = DEFAULT_SEASON;
         }
 
-        renderCurrentSeason();
+        safeRender();
         setupModalHandlers(courseVariantsMap);
       })
       .catch(function (err) {
-        console.error(err);
+        console.error('[Clavis] fetch error', err);
         grid.innerHTML = '<div>Fehler beim Laden des Katalogs</div>';
       });
 
@@ -630,10 +583,7 @@
     }
   }
 
-  // Ленивая инициализация после полной загрузки страницы
-  if (document.readyState === 'complete') {
-    initCampListWidget();
-  } else {
-    window.addEventListener('load', initCampListWidget);
-  }
+  window.ClavisCampsInit = function () {
+    setTimeout(initCampListWidget, 0);
+  };
 })();

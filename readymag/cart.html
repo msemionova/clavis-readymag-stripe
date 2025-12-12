@@ -1,11 +1,11 @@
 <button class="rm-cart-fab" id="cartFab">
-  Warenkorb
+  <i class="fas fa-shopping-cart"></i>
   <span class="rm-cart-count" id="cartCount">0</span>
 </button>
 
 <aside class="rm-drawer" id="cartDrawer">
   <div class="rm-d-head">
-    <div style="font-weight: 700">Warenkorb</div>
+    <div style="font-weight: 500">Warenkorb</div>
     <button class="rm-x" id="closeDrawer">✕</button>
   </div>
 
@@ -36,19 +36,20 @@
   /* КРИТИЧЕСКИЙ CSS — только чтобы не мигало */
   .rm-cart-fab {
     position: fixed;
-    top: 8px;
+    top: 7px;
     right: 20px;
     z-index: 40;
     background: #fff;
     color: #000;
-    padding: 4px 14px;
+    padding: 6px 14px;
     display: flex;
     gap: 8px;
     align-items: center;
     cursor: pointer;
     border: 0;
     border-radius: 999px;
-    font-size: 12px;
+    font-size: 10px;
+    letter-spacing: -0.3px;
   }
   .rm-cart-fab:hover {
     background: #000;
@@ -59,7 +60,8 @@
     color: #fff;
     border-radius: 999px;
     padding: 1px 6px;
-    font-size: 11px;
+    font-size: 9px;
+    letter-spacing: -0.3px;
   }
 
   .rm-drawer {
@@ -97,10 +99,11 @@
     fullDayDiscount: 100,
     apiBase: 'https://clavis-readymag-stripe.vercel.app',
   };
+
+  if (window.ClavisCartInit) {
+    window.ClavisCartInit();
+  }
 </script>
 
 <!-- внешний JS с логикой -->
-<script
-  src="https://clavis-readymag-stripe.vercel.app/clavis-cart-widget.js"
-  defer
-></script>
+<script src="https://clavis-readymag-stripe.vercel.app/clavis-cart-widget.js"></script>

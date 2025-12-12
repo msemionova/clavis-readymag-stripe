@@ -1,4 +1,3 @@
-<!-- Readymag / viewer / картинки -->
 <link rel="preconnect" href="https://st-p.rmcdn1.net" crossorigin />
 <link rel="preconnect" href="https://i-p.rmcdn.net" crossorigin />
 <link
@@ -6,3 +5,81 @@
   href="https://clavis-readymag-stripe.vercel.app"
   crossorigin
 />
+
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+/>
+
+<script>
+  var YEAR = '2026';
+  window.ClavisGlobalConfig = {
+    year: YEAR,
+    defaultSeason: 'winter_' + YEAR,
+    maxCamps: 8,
+    enableSeasonTabs: true,
+    showTitle: true,
+    showButton: true,
+    rmPageKey: null,
+    apiBase: 'https://clavis-readymag-stripe.vercel.app',
+
+    seasonsConfig: [
+      {
+        key: 'winter_' + YEAR,
+        label: 'Winter',
+        title: 'Winterferiencamps',
+        bg: '#f9c7ff',
+        tabHoverBg: '#000000',
+        tabHoverText: '#f9c7ff',
+        emptyImage:
+          'https://i-p.rmcdn.net/691608e5a42add5705475928/5961069/image-e7dbfebd-e213-4a6a-83c3-364b9e6cae02.webp?e=webp',
+        emptyDates: '02.02 – 06.02',
+        emptyText:
+          'Unsere Winterferiencamps ' + YEAR + ' sind bald hier buchbar.',
+      },
+      {
+        key: 'spring_' + YEAR,
+        label: 'Frühling',
+        title: 'Frühlingsferiencamps',
+        bg: '#00A554',
+        tabHoverBg: '#000000',
+        tabHoverText: '#00A554',
+        emptyImage:
+          'https://i-p.rmcdn.net/691608e5a42add5705475928/5961069/image-d559f9b3-460c-4e18-bcda-7c96aa6fadbe.webp?e=webp',
+        emptyDates: '02.03 – 30.05',
+        emptyText:
+          'Hier erscheinen bald die Camps für die Frühlingsferien ' +
+          YEAR +
+          '.',
+      },
+      {
+        key: 'summer_' + YEAR,
+        label: 'Sommer',
+        title: 'Sommerferiencamps',
+        bg: '#FFDB27',
+        tabHoverBg: '#000000',
+        tabHoverText: '#FFDB27',
+        emptyImage:
+          'https://i-p.rmcdn.net/691608e5a42add5705475928/5961069/image-3a4be414-ec4e-4e3d-ad4f-1f11eb3444c7.webp?e=webp',
+        emptyDates: '01.06 – 13.08',
+        emptyText:
+          'Die Sommerfereincamps verwandeln die Schulferien in einen Raum zum Ausprobieren und Gestalten. Jugendliche arbeiten projektbasiert und mit künstlerischen Praktiken, entdecken sich selbst, knüpfen Verbindungen zur Stadt und entwickeln visuelle Fähigkeiten. So erfahren sie Kunst als Teil des Lebens, der Stadt und des kulturellen Kontexts. ',
+      },
+      {
+        key: 'autumn_' + YEAR,
+        label: 'Herbst',
+        title: 'Herbstferiencamps',
+        bg: '#FF3B00',
+        tabHoverBg: '#000000',
+        tabHoverText: '#FF3B00',
+        emptyImage:
+          'https://i-p.rmcdn.net/691608e5a42add5705475928/5961069/image-9ddc7b80-e62a-410f-b65d-15b24c4f87d1.webp?e=webp',
+        emptyDates: '01.09 – 19.11',
+        emptyText:
+          'Bald finden Sie hier die Angebote für die Herbstferien ' +
+          YEAR +
+          '.',
+      },
+    ],
+  };
+</script>

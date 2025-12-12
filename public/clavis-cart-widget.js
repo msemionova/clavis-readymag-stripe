@@ -1,10 +1,11 @@
 (function () {
-  var cfg = window.ClavisConfig || {};
-  var FULL_DAY_DISCOUNT_EUR = cfg.fullDayDiscount || 100;
-  var API_BASE = cfg.apiBase || 'https://clavis-readymag-stripe.vercel.app';
-
   function initCartWidget() {
-    // MAIN
+    var cfg = window.ClavisConfig || {};
+    var FULL_DAY_DISCOUNT_EUR = cfg.fullDayDiscount || 100;
+    var API_BASE = cfg.apiBase || 'https://clavis-readymag-stripe.vercel.app';
+
+    var drawer = document.getElementById('cartDrawer');
+
     if (window.CartStore) return;
 
     var Bus = new EventTarget();
@@ -86,7 +87,6 @@
     } catch (e) {}
 
     //WARENKORB
-    var drawer = document.getElementById('cartDrawer');
     var cartList = document.getElementById('cartList');
     var totalEUR = document.getElementById('totalEUR');
     var parentEmail = document.getElementById('parentEmail');
@@ -246,7 +246,7 @@
             '</div>' +
             '</div>' +
             '<div>' +
-            '<div style="text-align:right; font-weight:700">' +
+            '<div style="text-align:right; font-weight:500">' +
             formatEUR(amount) +
             '</div>' +
             '<div style="text-align:right; margin-top:6px">' +
@@ -333,9 +333,18 @@
     drawer.classList.remove('rm-drawer--hidden');
   }
 
-  if (document.readyState === 'complete') {
-    initCartWidget();
+  window.ClavisCartInit = function () {
+    setTimeout(initCartWidget, 0);
+  };
+
+  if (
+    document.readyState === 'interactive' ||
+    document.readyState === 'complete'
+  ) {
+    window.ClavisCartInit();
   } else {
-    window.addEventListener('load', initCartWidget);
+    document.addEventListener('DOMContentLoaded', function () {
+      window.ClavisCartInit();
+    });
   }
 })();

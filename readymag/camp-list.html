@@ -5,7 +5,6 @@
 </div>
 <div id="camps-grid" class="rm-camps-grid"></div>
 
-<!-- ГЛОБАЛЬНАЯ МОДАЛКА ДЛЯ ВВОДА РЕБЁНКА -->
 <div class="rm-modal" id="campModal">
   <div class="rm-modal__backdrop" id="campModalBackdrop" data-modal-close></div>
   <div class="rm-modal__dialog">
@@ -70,22 +69,22 @@
   href="https://clavis-readymag-stripe.vercel.app/clavis-camps-widget.css"
 />
 
-<!-- маленький конфиг -->
-<script>
-  window.ClavisConfig = {
-    year: '2026',
-    defaultSeason: 'winter_2026',
-    maxCamps: 8,
-    enableSeasonTabs: true,
-    showTitle: true,
-    showButton: true,
-    rmPageKey: null,
-    apiBase: 'https://clavis-readymag-stripe.vercel.app',
-  };
-</script>
+<script src="https://clavis-readymag-stripe.vercel.app/clavis-camps-widget.js"></script>
 
-<!-- внешний JS с логикой -->
-<script
-  src="https://clavis-readymag-stripe.vercel.app/clavis-camps-widget.js"
-  defer
-></script>
+<script>
+  window.ClavisConfig = window.ClavisGlobalConfig;
+
+  (function waitForCampsBlock() {
+    const grid = document.querySelector('#camps-grid');
+
+    if (
+      grid &&
+      window.ClavisConfig &&
+      typeof window.ClavisCampsInit === 'function'
+    ) {
+      window.ClavisCampsInit();
+    } else {
+      setTimeout(waitForCampsBlock, 30);
+    }
+  })();
+</script>

@@ -60,7 +60,7 @@
 
 .rm-col-title {
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 500;
 }
 .rm-col-title a.rm-course-link {
   color: inherit;
@@ -78,7 +78,7 @@
 
 .rm-col-price {
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .rm-col-terms {
@@ -88,7 +88,7 @@
 
 .rm-col-price {
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .rm-col-btn {
@@ -162,7 +162,7 @@
 
 .rm-modal__title {
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 500;
   margin: 0;
 }
 
@@ -272,6 +272,18 @@
 
 .rm-season-tab.is-active {
   color: var(--rm-season-bg);
+}
+.rm-season-tab.winter {
+  color: #f9c7ff;
+}
+.rm-season-tab.spring {
+  color: #00a554;
+}
+.rm-season-tab.summer {
+  color: #ffdb27;
+}
+.rm-season-tab.autumn {
+  color: #ff3b00;
 }
 
 .rm-season-title-wrapper {
