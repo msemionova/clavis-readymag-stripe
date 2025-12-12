@@ -67,7 +67,7 @@
   text-decoration: none;
 }
 .rm-col-title a.rm-course-link:hover {
-  text-decoration: underline;
+  opacity: 60%;
 }
 
 .rm-col-date,
