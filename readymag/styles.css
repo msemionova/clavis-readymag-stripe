@@ -17,3 +17,8 @@
     Segoe UI, Ubuntu, Fira Sans, Roboto, Avenir Next, Helvetica Neue, Helvetica,
     Arial, sans-serif;
 }
+
+.season-bg,
+[data-id='693c29f5e2724635d9eeca58'] {
+  background-color: var(--rm-season-bg) !important;
+}
