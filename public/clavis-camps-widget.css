@@ -273,16 +273,16 @@
 .rm-season-tab.is-active {
   color: var(--rm-season-bg);
 }
-.rm-season-tab.winter {
+.rm-season-tab.winter:hover {
   color: #f9c7ff;
 }
-.rm-season-tab.spring {
+.rm-season-tab.spring:hover {
   color: #00a554;
 }
-.rm-season-tab.summer {
+.rm-season-tab.summer:hover {
   color: #ffdb27;
 }
-.rm-season-tab.autumn {
+.rm-season-tab.autumn:hover {
   color: #ff3b00;
 }
 
