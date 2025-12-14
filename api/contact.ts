@@ -1,4 +1,6 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
+
+const resend = new Resend(process.env.RESEND_API_KEY || '');
 
 export default async function handler(req: any, res: any) {
   const ALLOWED_ORIGINS = [
@@ -23,10 +25,25 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { name, childName, email, phone, message, agb, privacy, page } =
-    req.body || {};
+  if (!process.env.RESEND_API_KEY) {
+    return res
+      .status(500)
+      .json({ error: 'E-Mail Service ist nicht konfiguriert.' });
+  }
 
-  // Простая серверная валидация (на всякий случай)
+  const { name, childName, email, phone, message, agb, privacy, page } =
+    (req.body || {}) as {
+      name?: string;
+      childName?: string;
+      email?: string;
+      phone?: string;
+      message?: string;
+      agb?: boolean;
+      privacy?: boolean;
+      page?: string;
+    };
+
+  // Простая серверная валидация (на случай, если кто-то обойдёт фронт)
   if (!name || !childName || !email || !phone || !agb || !privacy) {
     return res
       .status(400)
@@ -34,53 +51,46 @@ export default async function handler(req: any, res: any) {
   }
 
   const to = process.env.CONTACT_TO_EMAIL;
-  const from = process.env.CONTACT_FROM_EMAIL || process.env.CONTACT_TO_EMAIL;
-
   if (!to) {
     return res
       .status(500)
       .json({ error: 'Kontakt-E-Mail ist nicht konfiguriert.' });
   }
 
-  // Настройка SMTP из env
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT || 465),
-    secure: process.env.SMTP_SECURE !== 'false', // по умолчанию true
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
-
   const subject = `[Clavis Kontaktformular] Neue Nachricht von ${name}`;
 
   const textBody = `
-    Neue Nachricht vom Kontaktformular:
+Neue Nachricht vom Kontaktformular:
 
-    Name:        ${name}
-    Kind:        ${childName}
-    E-Mail:      ${email}
-    Telefon:     ${phone}
-    AGB:         ${agb ? 'ja' : 'nein'}
-    Datenschutz: ${privacy ? 'ja' : 'nein'}
-    Seite:       ${page || '-'}
+Name:        ${name}
+Kind:        ${childName}
+E-Mail:      ${email}
+Telefon:     ${phone}
+AGB:         ${agb ? 'ja' : 'nein'}
+Datenschutz: ${privacy ? 'ja' : 'nein'}
+Seite:       ${page || '-'}
 
-    Nachricht:
-    ${message || '(keine Nachricht)'}
+Nachricht:
+${message || '(keine Nachricht)'}
   `.trim();
 
   try {
-    await transporter.sendMail({
+    const { error } = await resend.emails.send({
+      // Пока используем стандартный отправитель Resend
+      from: 'Clavis Kontaktformular <onboarding@resend.dev>',
       to,
-      from,
       subject,
       text: textBody,
-      replyTo: email, // чтобы можно было просто нажать "Ответить" клиенту
+      replyTo: email,
     });
 
+    if (error) {
+      console.error('Resend error', error);
+      return res.status(500).json({ error: 'Fehler beim Senden der E-Mail.' });
+    }
+
     return res.status(200).json({ ok: true });
-  } catch (err: any) {
+  } catch (err) {
     console.error('Mail send error', err);
     return res.status(500).json({ error: 'Fehler beim Senden der E-Mail.' });
   }
