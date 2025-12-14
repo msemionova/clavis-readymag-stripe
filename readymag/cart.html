@@ -1,5 +1,5 @@
-<button class="rm-cart-fab" id="cartFab">
-  <i class="fas fa-shopping-cart"></i>
+<button class="rm-btn rm-cart-fab" id="cartFab">
+  Warenkorb
   <span class="rm-cart-count" id="cartCount">0</span>
 </button>
 
@@ -34,26 +34,27 @@
 
 <style>
   /* КРИТИЧЕСКИЙ CSS — только чтобы не мигало */
-  .rm-cart-fab {
-    position: fixed;
-    top: 7px;
-    right: 20px;
-    z-index: 40;
+  .rm-btn {
+    font-weight: 500;
+    font-size: 10px;
+    line-height: 1;
     background: #fff;
     color: #000;
-    padding: 6px 14px;
-    display: flex;
-    gap: 8px;
-    align-items: center;
+    padding: 10px 16px;
     cursor: pointer;
     border: 0;
     border-radius: 999px;
-    font-size: 10px;
     letter-spacing: -0.3px;
+    text-decoration: none;
   }
-  .rm-cart-fab:hover {
-    background: #000;
-    color: #fff;
+  .rm-cart-fab {
+    position: fixed;
+    top: 4px;
+    right: 20px;
+    z-index: 40;
+    display: flex;
+    gap: 8px;
+    align-items: center;
   }
   .rm-cart-count {
     background: #000;
@@ -63,7 +64,6 @@
     font-size: 9px;
     letter-spacing: -0.3px;
   }
-
   .rm-drawer {
     position: fixed;
     top: 0;

@@ -2,12 +2,12 @@
   "name": "clavis-readymag-stripe",
   "private": true,
   "type": "module",
-  "dependencies": {
-    "csv-parser": "^3.2.0",
-    "csv-writer": "^1.6.0",
-    "dotenv": "^17.2.3",
-    "stripe": "^16.12.0"
-  },
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "scripts": {
     "dev": "node",
     "start": "node stripe/import.js",
@@ -21,10 +21,14 @@
     "backup:list": "node stripe/backup.js list",
     "backup:restore": "node stripe/backup.js restore"
   },
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "dependencies": {
+    "csv-parser": "^3.2.0",
+    "csv-writer": "^1.6.0",
+    "dotenv": "^17.2.3",
+    "nodemailer": "^7.0.11",
+    "stripe": "^16.12.0"
+  },
+  "devDependencies": {
+    "@types/nodemailer": "^7.0.4"
+  }
 }

@@ -412,7 +412,7 @@
             formatEUR(amount || 0) +
             '</div>' +
             '<div class="rm-col-btn">' +
-            '<button class="rm-btn rm-btn-big" data-open="' +
+            '<button class="rm-btn" data-open="' +
             cKey +
             '" ' +
             (isFull ? 'disabled' : '') +
