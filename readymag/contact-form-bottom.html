@@ -1,0 +1,293 @@
+<div class="clavis-inline">
+  <div class="clavis-layout">
+    <div class="clavis-col clavis-col-title">
+      <h2 class="clavis-title-bottom">
+        Du bist interessiert?<br />Sende uns eine Nachricht
+      </h2>
+    </div>
+
+    <form id="clavisContactFormInline" class="clavis-form" novalidate>
+      <label class="clavis-hp">
+        Website
+        <input name="website" autocomplete="off" />
+      </label>
+
+      <div class="clavis-grid">
+        <div class="clavis-main">
+          <div class="clavis-field">
+            <label for="nameInline">Vor- und Nachname</label>
+            <input
+              id="nameInline"
+              name="name"
+              type="text"
+              placeholder="Vor- und Nachname"
+              required
+              minlength="2"
+              autocomplete="name"
+            />
+            <div class="error" data-err-for="name"></div>
+          </div>
+
+          <div class="clavis-field">
+            <label for="childNameInline">Name Ihres Kindes</label>
+            <input
+              id="childNameInline"
+              name="childName"
+              type="text"
+              placeholder="Name Ihres Kindes"
+              required
+              minlength="2"
+            />
+            <div class="error" data-err-for="childName"></div>
+          </div>
+
+          <div class="clavis-field">
+            <label for="emailInline">E-mail</label>
+            <input
+              id="emailInline"
+              name="email"
+              type="email"
+              placeholder="E-Mail-Adresse"
+              required
+            />
+            <div class="error" data-err-for="email"></div>
+          </div>
+
+          <div class="clavis-field">
+            <label for="phoneInline">Telefonnummer</label>
+            <input
+              id="phoneInline"
+              name="phone"
+              type="tel"
+              placeholder="Telefonnummer"
+              required
+              inputmode="tel"
+              pattern="^[0-9+()\\s-]{6,}$"
+            />
+            <div class="error" data-err-for="phone"></div>
+          </div>
+        </div>
+
+        <!-- ПРАВАЯ КОЛОНКА -->
+        <div class="clavis-side">
+          <div class="clavis-message-block">
+            <div class="clavis-message-title">Wie können wir Ihnen helfen?</div>
+            <textarea
+              id="messageInline"
+              name="message"
+              rows="6"
+              placeholder="Ihre Nachricht"
+            ></textarea>
+            <div class="error" data-err-for="message"></div>
+          </div>
+
+          <div class="clavis-checks">
+            <label class="clavis-check">
+              <input id="agbInline" name="agb" type="checkbox" required />
+              <span>
+                Die
+                <a
+                  href="https://readymag.website/u612815371/5961069/agb"
+                  target="_blank"
+                  rel="noopener"
+                  >AGB</a
+                >
+                habe ich zur Kenntnis genommen
+              </span>
+            </label>
+            <div class="error" data-err-for="agb"></div>
+
+            <label class="clavis-check">
+              <input
+                id="privacyInline"
+                name="privacy"
+                type="checkbox"
+                required
+              />
+              <span>
+                <a
+                  href="https://readymag.website/u612815371/5961069/datenschutz"
+                  target="_blank"
+                  rel="noopener"
+                  >Datenschutzerklärung</a
+                >
+                gelesen und nehme sie zur Kenntnis
+              </span>
+            </label>
+            <div class="error" data-err-for="privacy"></div>
+          </div>
+        </div>
+
+        <button class="clavis-submit" type="submit">Nachricht senden</button>
+        <div class="clavis-status" aria-live="polite"></div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+  .clavis-title-bottom {
+    font-size: 24px;
+    font-weight: 500;
+    letter-spacing: -1px;
+  }
+
+  .clavis-inline {
+    padding: 50px 25px;
+  }
+
+  .clavis-inline .clavis-layout {
+    column-gap: 60px;
+  }
+
+  .error {
+    min-height: 16px;
+    font-size: 11px;
+    color: #b00020;
+  }
+</style>
+
+<script>
+  (function initInlineContactForm() {
+    const endpoint = 'https://clavis-readymag-stripe.vercel.app/api/contact';
+
+    const form = document.getElementById('clavisContactFormInline');
+    if (!form) return;
+
+    const statusEl = form.querySelector('.clavis-status');
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const createdAt = Date.now();
+
+    const setErr = (name, msg) => {
+      const err = form.querySelector(`[data-err-for="${name}"]`);
+      if (err) err.textContent = msg || '';
+      const input = form.querySelector(`[name="${name}"], #${name}`);
+      if (
+        input &&
+        (input.tagName === 'INPUT' || input.tagName === 'TEXTAREA')
+      ) {
+        input.classList.toggle('invalid', !!msg);
+      }
+    };
+
+    const clearAll = () => {
+      [...form.querySelectorAll('.err')].forEach((e) => (e.textContent = ''));
+      [...form.querySelectorAll('input,textarea')].forEach((el) =>
+        el.classList.remove('invalid')
+      );
+      if (statusEl) statusEl.textContent = '';
+    };
+
+    const validate = () => {
+      let ok = true;
+
+      const name = form.name.value.trim();
+      const childName = form.childName.value.trim();
+      const email = form.email.value.trim();
+      const phone = form.phone.value.trim();
+      const message = form.message.value.trim();
+      const hp = form.website.value.trim();
+
+      if (hp) return { ok: false, bot: true };
+
+      if (Date.now() - createdAt < 3000) {
+        return { ok: false, bot: true };
+      }
+
+      if (name.length < 2) {
+        setErr('name', 'Bitte geben Sie Ihren Namen ein.');
+        ok = false;
+      } else setErr('name', '');
+
+      if (childName.length < 2) {
+        setErr('childName', 'Bitte geben Sie den Namen Ihres Kindes ein.');
+        ok = false;
+      } else setErr('childName', '');
+
+      if (!email) {
+        setErr('email', 'Bitte geben Sie Ihre E-Mail ein.');
+        ok = false;
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        setErr('email', 'Bitte geben Sie eine gültige E-Mail ein.');
+        ok = false;
+      } else setErr('email', '');
+
+      if (!phone) {
+        setErr('phone', 'Bitte geben Sie Ihre Telefonnummer ein.');
+        ok = false;
+      } else if (!/^[0-9+()\s-]{6,}$/.test(phone)) {
+        setErr('phone', 'Bitte geben Sie eine gültige Telefonnummer ein.');
+        ok = false;
+      } else setErr('phone', '');
+
+      if (!form.agb.checked) {
+        setErr('agb', 'Bitte bestätigen Sie die AGB.');
+        ok = false;
+      } else setErr('agb', '');
+      if (!form.privacy.checked) {
+        setErr('privacy', 'Bitte bestätigen Sie die Datenschutzerklärung.');
+        ok = false;
+      } else setErr('privacy', '');
+
+      if (message.length > 2000) {
+        setErr('message', 'Nachricht ist zu lang (max. 2000 Zeichen).');
+        ok = false;
+      } else setErr('message', '');
+
+      return { ok };
+    };
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearAll();
+
+      const v = validate();
+      if (!v.ok) return;
+      if (v.bot) return;
+
+      submitBtn.disabled = true;
+      if (statusEl) statusEl.textContent = 'Senden…';
+
+      const payload = {
+        name: form.name.value.trim(),
+        childName: form.childName.value.trim(),
+        email: form.email.value.trim(),
+        phone: form.phone.value.trim(),
+        message: form.message.value.trim(),
+        agb: form.agb.checked,
+        privacy: form.privacy.checked,
+        page: location.href + '#footer-contact',
+      };
+
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          if (statusEl) {
+            statusEl.textContent =
+              data?.error ||
+              'Fehler beim Senden. Bitte versuchen Sie es erneut.';
+          }
+          submitBtn.disabled = false;
+          return;
+        }
+
+        if (statusEl)
+          statusEl.textContent = 'Danke! Ihre Nachricht wurde gesendet.';
+        form.reset();
+        submitBtn.disabled = false;
+      } catch (err) {
+        if (statusEl) {
+          statusEl.textContent =
+            'Netzwerkfehler. Bitte später erneut versuchen.';
+        }
+        submitBtn.disabled = false;
+      }
+    });
+  })();
+</script>
