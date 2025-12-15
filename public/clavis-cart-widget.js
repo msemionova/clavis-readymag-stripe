@@ -252,7 +252,7 @@
             '<div style="text-align:right; margin-top:6px">' +
             '<button class="rm-x" data-remove="' +
             i +
-            '">Löschen</button>' +
+            '">✕</button>' +
             '</div>' +
             '</div>' +
             '</div>'
