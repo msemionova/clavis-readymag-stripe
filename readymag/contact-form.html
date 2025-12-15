@@ -89,7 +89,13 @@
 
             <div class="clavis-checks">
               <label class="clavis-check">
-                <input id="agb" name="agb" type="checkbox" required />
+                <input
+                  class="clavis-checkbox"
+                  id="agb"
+                  name="agb"
+                  type="checkbox"
+                  required
+                />
                 <span>
                   Die
                   <a
@@ -104,7 +110,13 @@
               <div class="err" data-err-for="agb"></div>
 
               <label class="clavis-check">
-                <input id="privacy" name="privacy" type="checkbox" required />
+                <input
+                  class="clavis-checkbox"
+                  id="privacy"
+                  name="privacy"
+                  type="checkbox"
+                  required
+                />
                 <span>
                   <a
                     href="https://readymag.website/u612815371/5961069/datenschutz"
@@ -270,7 +282,7 @@
 
   .clavis-check {
     display: flex;
-    gap: 10px;
+    gap: 5px;
     align-items: flex-start;
     font-size: 12px;
     line-height: 1;
@@ -285,6 +297,11 @@
   .clavis-check a {
     font-weight: 500;
     color: #000;
+  }
+
+  .clavis-checkbox {
+    min-width: 14px;
+    min-height: 14px;
   }
 
   .err {
