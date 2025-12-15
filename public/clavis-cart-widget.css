@@ -91,9 +91,6 @@
 }
 
 .rm-x {
-  position: absolute;
-  top: 24px;
-  right: 28px;
   width: 24px;
   height: 24px;
   border-radius: 999px;
