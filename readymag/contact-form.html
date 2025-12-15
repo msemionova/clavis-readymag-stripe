@@ -1,8 +1,8 @@
 <p class="clavis-open-btn">KONTAKTE</p>
 
 <div id="clavisOverlay" class="clavis-overlay clavis-hidden">
-  <button class="clavis-close" type="button" aria-label="Schließen">✕</button>
   <div class="clavis-modal">
+    <button class="clavis-close" type="button" aria-label="Schließen">✕</button>
     <div class="clavis-layout">
       <div class="clavis-col clavis-col-title">
         <h2 class="clavis-title">
@@ -27,6 +27,7 @@
                 placeholder="Vor- und Nachname"
                 required
                 minlength="2"
+                autocomplete="name"
               />
               <div class="err" data-err-for="name"></div>
             </div>
@@ -40,6 +41,7 @@
                 placeholder="Name Ihres Kindes"
                 required
                 minlength="2"
+                autocomplete="name"
               />
               <div class="err" data-err-for="childName"></div>
             </div>
@@ -69,10 +71,6 @@
               />
               <div class="err" data-err-for="phone"></div>
             </div>
-
-            <button class="clavis-submit" type="submit">
-              Nachricht senden
-            </button>
           </div>
 
           <div class="clavis-side">
@@ -120,9 +118,11 @@
               <div class="err" data-err-for="privacy"></div>
             </div>
           </div>
-        </div>
 
-        <div class="clavis-status" aria-live="polite"></div>
+          <button class="clavis-submit" type="submit">Nachricht senden</button>
+
+          <div class="clavis-status" aria-live="polite"></div>
+        </div>
       </form>
     </div>
   </div>
@@ -142,12 +142,12 @@
     position: fixed;
     inset: 0;
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
-    background: var(--rm-season-bg);
+    background: rgba(0, 0, 0, 0.65);
     z-index: 9999;
     transition: opacity 0.2s ease;
-    padding: 50px;
+    padding: 25px;
     overflow-y: auto;
   }
 
@@ -159,9 +159,9 @@
   .clavis-modal {
     position: relative;
     width: 100%;
-    padding: 0;
+    padding: 50px;
     border-radius: 0;
-    background: transparent;
+    background: var(--rm-season-bg);
     box-shadow: none;
     box-sizing: border-box;
     max-height: none;
@@ -175,8 +175,8 @@
     width: 32px;
     height: 32px;
     border-radius: 999px;
-    border: 1px solid rgba(0, 0, 0, 0.15);
-    background: #f5f5f5;
+    border: none;
+    background: #ededed;
     cursor: pointer;
     font-size: 18px;
     line-height: 1;
@@ -199,7 +199,7 @@
 
   .clavis-title {
     margin: 0;
-    font-weight: 700;
+    font-weight: 500;
     font-size: 32px;
     line-height: 1.15;
     color: #000;
@@ -209,24 +209,12 @@
     margin: 0;
   }
 
-  .clavis-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.2fr);
-    column-gap: 48px;
-  }
-
-  .clavis-main,
-  .clavis-side {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-  }
-
   .clavis-field label {
     display: block;
     margin-bottom: 6px;
     font-size: 13px;
     color: #111;
+    font-weight: 400;
   }
 
   .clavis-field input,
@@ -239,10 +227,13 @@
     background: transparent;
     font-size: 14px;
     outline: none;
+    font-weight: 400;
   }
 
-  .clavis-field input::placeholder {
+  .clavis-field input::placeholder,
+  .clavis-message-block textarea::placeholder {
     color: rgba(0, 0, 0, 0.35);
+    font-weight: 400;
   }
 
   .clavis-field input:focus,
@@ -252,24 +243,25 @@
 
   .clavis-field input.invalid,
   .clavis-message-block textarea.invalid {
-    border-bottom-color: #b00020;
+    border-bottom-color: var(--rm-season-accentColor);
   }
 
   .clavis-message-title {
     font-size: 14px;
     margin-bottom: 6px;
     color: #111;
+    font-weight: 400;
   }
 
   .clavis-message-block textarea {
     min-height: 140px;
     resize: vertical;
+    font-weight: 400;
   }
 
   .clavis-checks {
     display: flex;
     flex-direction: column;
-    gap: 8px;
     margin-top: 6px;
   }
 
@@ -280,20 +272,51 @@
     font-size: 13px;
     line-height: 1.4;
     color: #111;
+    font-weight: 400;
   }
 
   .clavis-check input {
     margin-top: 2px;
   }
 
+  .clavis-check a {
+    font-weight: 500;
+    color: #000;
+  }
+
   .err {
     min-height: 16px;
     font-size: 11px;
-    color: #b00020;
-    margin-top: 2px;
+    color: var(--rm-season-accentColor);
+  }
+
+  .clavis-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.2fr);
+    column-gap: 48px;
+    row-gap: 18px;
+    grid-template-areas:
+      'main side'
+      'button side'
+      'status status';
+  }
+
+  .clavis-main {
+    grid-area: main;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .clavis-side {
+    grid-area: side;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
   }
 
   .clavis-submit {
+    grid-area: button;
     margin-top: 24px;
     padding: 12px 32px;
     border-radius: 999px;
@@ -301,13 +324,17 @@
     background: #000;
     color: #fff;
     font-weight: 500;
-    font-size: 14px;
+    font-size: 12px;
     cursor: pointer;
-    align-self: flex-start;
+    justify-self: flex-start;
+  }
+
+  .clavis-submit:hover {
+    opacity: 0.75;
   }
 
   .clavis-submit[disabled] {
-    opacity: 0.6;
+    opacity: 0.4;
     cursor: not-allowed;
   }
 
@@ -325,9 +352,15 @@
   }
 
   @media (max-width: 1024px) {
+    .clavis-overlay {
+      padding: 32px 16px 24px;
+      align-items: unset;
+    }
+
     .clavis-modal {
       padding: 32px 28px 24px;
       max-width: 100%;
+      overflow: auto;
     }
 
     .clavis-layout {
@@ -341,33 +374,19 @@
 
     .clavis-grid {
       grid-template-columns: 1fr;
-      row-gap: 24px;
+      grid-template-areas:
+        'main'
+        'side'
+        'button'
+        'status';
+      row-gap: 20px;
     }
 
     .clavis-submit {
       width: 100%;
+      justify-self: stretch;
       text-align: center;
-      align-self: stretch;
-    }
-  }
-
-  @media (max-width: 600px) {
-    .clavis-overlay {
-      padding: 32px 16px 24px;
-    }
-
-    .clavis-modal {
-      max-height: 100vh;
-    }
-  }
-
-  @media (max-width: 1024px) {
-    .clavis-overlay {
-      padding: 56px 24px 32px;
-    }
-
-    .clavis-modal {
-      max-width: 100%;
+      margin-top: 8px;
     }
   }
 </style>
@@ -393,19 +412,24 @@
       const modal = overlay.querySelector('.clavis-modal');
       const statusEl = form.querySelector('.clavis-status');
       const submitBtn = form.querySelector('button[type="submit"]');
-      const createdAt = Date.now();
+      let createdAt = Date.now();
 
       if (overlay.parentElement !== document.body) {
         document.body.appendChild(overlay);
       }
 
       const openModal = () => {
+        createdAt = Date.now();
+        clearAll();
+        form.reset();
         overlay.classList.remove('clavis-hidden');
       };
 
       const closeModal = () => {
         overlay.classList.add('clavis-hidden');
         sessionStorage.setItem('clavisContactDismissed', '1');
+        form.reset();
+        clearAll();
       };
 
       openBtn.addEventListener('click', (e) => {
@@ -414,7 +438,7 @@
       });
 
       if (modal) {
-        const closeBtn = overlay.querySelector('.clavis-close');
+        const closeBtn = modal.querySelector('.clavis-close');
         if (closeBtn) closeBtn.addEventListener('click', closeModal);
       }
 

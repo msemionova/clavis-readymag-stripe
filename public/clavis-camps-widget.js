@@ -76,10 +76,15 @@
       var conf = getSeasonConfig(seasonKey) || {};
 
       var bg = conf.bg || 'var(--rm-season-bg)';
+      var accentColor = conf.accentColor || 'var(--rm-season-accentColor)';
       var tabHoverBg = conf.tabHoverBg || '#000000';
       var tabHoverText = conf.tabHoverText || '#ffffff';
 
       document.documentElement.style.setProperty('--rm-season-bg', bg);
+      document.documentElement.style.setProperty(
+        '--rm-season-accentColor',
+        accentColor
+      );
       document.documentElement.style.setProperty(
         '--rm-season-tab-hover-bg',
         tabHoverBg
