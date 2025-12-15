@@ -91,9 +91,15 @@
 }
 
 .rm-x {
-  border: 1px solid #000;
-  background: #fff;
+  position: absolute;
+  top: 24px;
+  right: 28px;
+  width: 24px;
+  height: 24px;
   border-radius: 999px;
-  padding: 4px 8px;
+  border: none;
+  background: #ededed;
   cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
 }
