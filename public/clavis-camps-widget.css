@@ -178,7 +178,7 @@
 .rm-modal__title {
   font-size: 18px;
   font-weight: 500;
-  margin: 0;
+  margin-bottom: 14px;
   letter-spacing: -1px;
 }
 
@@ -218,13 +218,11 @@
   flex: 1 1 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
 }
 
 .rm-modal__field label {
   font-size: 12px;
   display: block;
-  margin-bottom: 6px;
   color: #111;
   font-weight: 400;
   letter-spacing: -0.3px;
@@ -242,11 +240,17 @@
   outline: none;
   font-weight: 500;
   letter-spacing: -0.3px;
+  color: rgba(0, 0, 0, 1);
 }
 .rm-input:focus,
 .rm-select:focus {
   outline: none;
   border-bottom: 1px solid rgba(0, 0, 0, 1);
+}
+
+.rm-input::placeholder,
+.rm-select::placeholder {
+  color: rgba(0, 0, 0, 0.2);
 }
 
 .rm-modal__note {
