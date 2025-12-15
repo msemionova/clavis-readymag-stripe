@@ -50,7 +50,7 @@
   padding-top: 14px;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .rm-camp-row {
     grid-template-columns: 1fr;
     row-gap: 6px;
@@ -94,7 +94,7 @@
 .rm-col-btn {
   text-align: right;
 }
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .rm-col-btn {
     text-align: left;
     margin-top: 6px;
@@ -208,7 +208,7 @@
   display: flex;
   gap: 10px;
 }
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .rm-modal__row {
     flex-direction: column;
   }
@@ -392,7 +392,7 @@
   flex: 0 0 25%;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .rm-empty-season {
     flex-direction: column;
     gap: 24px;
