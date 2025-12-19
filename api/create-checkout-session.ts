@@ -96,12 +96,8 @@ export default async function handler(req, res) {
       const productId = (it as any).productId || 'unknown';
       const key = `${productId}__${slot}`;
       const fullId = it.prices.fullPriceId;
-      const discId = it.prices.discPriceId;
 
-      // Для лимитов нас не волнует, по какой цене продаём — берём любую, где есть метадата
-      const entry =
-        cache.get(fullId) || (discId ? cache.get(discId) : undefined);
-
+      const entry = cache.get(fullId);
       const meta = (entry?.metadata || {}) as any;
 
       const maxSeats = Number(meta.max_seats || 0);

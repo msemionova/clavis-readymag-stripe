@@ -116,7 +116,7 @@ export default async function handler(req, res) {
       Object.entries(p.slots).forEach(([slotKey, sAny]) => {
         const s = sAny as any;
 
-        if (!s.fullPriceId || !s.discPriceId || !s.fullAmount) return;
+        if (!s.fullPriceId || !s.fullAmount) return;
 
         const maxSeats = s.maxSeats || 0;
         const bookedSeats = s.bookedSeats || 0;

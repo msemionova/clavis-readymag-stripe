@@ -108,37 +108,68 @@ export default async function handler(req, res) {
         slots[key].inc += inc as number;
       }
 
-      // 3) для каждого слота обновляем booked_seats у всех цен этого слота
+      // 3) для каждого слота: обновляем ТОЛЬКО full price, потом синкаем остальные
       for (const key of Object.keys(slots)) {
         const { productId, slot, inc } = slots[key];
 
-        const prices = await stripe.prices.list({
+        const pricesResp = await stripe.prices.list({
           product: productId,
           active: true,
           limit: 100,
         });
 
-        const slotPrices = prices.data.filter((p) => {
+        const slotPrices = pricesResp.data.filter((p) => {
           const pm: any = p.metadata || {};
           return (pm.slot || '').toLowerCase() === slot;
         });
 
         if (slotPrices.length === 0) continue;
 
-        await Promise.all(
-          slotPrices.map(async (p) => {
-            const currentBooked = Number(
-              (p.metadata as any)?.booked_seats || 0
-            );
-            const newBooked = currentBooked + inc;
+        const fullPrice = slotPrices.find((p) => {
+          const pm: any = p.metadata || {};
+          return ((pm.discount || 'full') as string).toLowerCase() === 'full';
+        });
 
-            return stripe.prices.update(p.id, {
+        if (!fullPrice) {
+          console.warn('[webhook] no full price for', productId, slot);
+          continue;
+        }
+
+        const fullMeta: any = fullPrice.metadata || {};
+        const maxSeats = String(fullMeta.max_seats || '0');
+
+        const currentBooked = Number(fullMeta.booked_seats || 0);
+        const newBooked = currentBooked + inc;
+
+        // A) обновляем источник истины
+        const updatedFull = await stripe.prices.update(fullPrice.id, {
+          metadata: {
+            ...(fullPrice.metadata || {}),
+            max_seats: maxSeats,
+            booked_seats: String(newBooked),
+          },
+        });
+
+        const finalMax = String(
+          (updatedFull.metadata as any)?.max_seats || maxSeats
+        );
+        const finalBooked = String(
+          (updatedFull.metadata as any)?.booked_seats || String(newBooked)
+        );
+
+        // B) синкаем остальные цены слота (disc10 и т.п.)
+        const others = slotPrices.filter((p) => p.id !== fullPrice.id);
+
+        await Promise.all(
+          others.map((p) =>
+            stripe.prices.update(p.id, {
               metadata: {
                 ...(p.metadata || {}),
-                booked_seats: String(newBooked),
+                max_seats: finalMax,
+                booked_seats: finalBooked,
               },
-            });
-          })
+            })
+          )
         );
       }
     } catch (err) {
