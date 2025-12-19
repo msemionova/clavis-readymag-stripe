@@ -27,6 +27,44 @@
         />
       </div>
 
+      <div class="rm-legal">
+        <label class="rm-check">
+          <input type="checkbox" id="legalAgb" />
+          Ich habe die
+          <a
+            href="https://readymag.website/u612815371/5961069/agb"
+            target="_blank"
+            rel="noopener"
+            >Allgemeinen Geschäftsbedingungen (AGB)</a
+          >
+          gelesen und akzeptiere sie
+        </label>
+
+        <label class="rm-check">
+          <input type="checkbox" id="legalWiderruf" />
+          Ich habe die
+          <a
+            href="https://readymag.website/u612815371/5961069/widerrufsbelehrung"
+            target="_blank"
+            rel="noopener"
+            >Widerrufsbelehrung</a
+          >
+          gelesen und zur Kenntnis genommen
+        </label>
+
+        <label class="rm-check">
+          <input type="checkbox" id="legalDsgvo" />
+          Ich habe die
+          <a
+            href="https://readymag.website/u612815371/5961069/datenschutz"
+            target="_blank"
+            rel="noopener"
+            >Datenschutzerklärung</a
+          >
+          zur Kenntnis genommen
+        </label>
+      </div>
+
       <div class="rm-pay-wrapper">
         <button class="rm-btn rm-pay" id="payBtn">
           Zur Zahlung fortfahren
@@ -42,6 +80,27 @@
 </aside>
 
 <style>
+  .rm-legal {
+    display: flex;
+    flex-direction: column;
+    font-size: 10px;
+  }
+  .rm-check {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .rm-check input {
+    width: 10px;
+    height: 10px;
+  }
+  .rm-check a {
+    color: #000;
+    font-weight: 500;
+  }
+  .rm-check a:hover {
+    opacity: 0.75;
+  }
   .rm-btn {
     font-weight: 500;
     font-size: 10px;

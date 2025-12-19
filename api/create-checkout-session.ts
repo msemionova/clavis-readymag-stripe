@@ -41,6 +41,7 @@ export default async function handler(req, res) {
         title?: string;
         periodLabel?: string;
         timeLabel?: string;
+        childDob?: string;
       }>;
     };
 
@@ -225,7 +226,39 @@ export default async function handler(req, res) {
     const capFirst = (s?: string) =>
       s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
 
-    // Stripe line_items с красивым названием и description
+    const nameRe = /^[A-Za-zÀ-ÖØ-öø-ÿ\s'-]{1,60}$/;
+
+    for (const it of items) {
+      if (
+        !nameRe.test((it.childFirst || '').trim()) ||
+        !nameRe.test((it.childLast || '').trim())
+      ) {
+        return res.status(400).json({
+          error:
+            'Bitte geben Sie die korrekten Namen ein - in lateinischer Sprache, ohne unnötige Zeiche',
+        });
+      }
+
+      const dob = (it as any).childDob;
+
+      if (!dob || !/^\d{4}-\d{2}-\d{2}$/.test(dob)) {
+        return res.status(400).json({ error: 'INVALID_DOB' });
+      }
+
+      const d = new Date(dob + 'T00:00:00Z');
+      if (Number.isNaN(d.getTime())) {
+        return res.status(400).json({ error: 'INVALID_DOB' });
+      }
+
+      const year = d.getUTCFullYear();
+      const now = new Date();
+      const age = (now.getTime() - d.getTime()) / (365.25 * 24 * 3600 * 1000);
+
+      if (year < 1900 || year > now.getUTCFullYear() || age < 6 || age > 18) {
+        return res.status(400).json({ error: 'INVALID_DOB' });
+      }
+    }
+
     const line_items = items.map((it, idx) => {
       const childKey = `${norm(it.childFirst)}|${norm(it.childLast)}`;
       const isSibling = siblingKeys.has(childKey);
@@ -323,6 +356,7 @@ export default async function handler(req, res) {
               period_label: periodLabel,
               time_label: timeLabel,
               product_id: (it as any).productId || '',
+              child_dob: (it as any).childDob || '',
               discount_type: applySiblingDiscount
                 ? 'sibling_10'
                 : hasFullDayDiscountHere
@@ -349,7 +383,7 @@ export default async function handler(req, res) {
       .map((ch) => `${ch.first} ${ch.last}`)
       .join(', ');
 
-    const successUrl = `${process.env.RETURN_URL}?paid=1&session_id={CHECKOUT_SESSION_ID}`;
+    const successUrl = `${process.env.SUCCESS_URL}?paid=1&session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${process.env.RETURN_URL}`;
 
     const session = await stripe.checkout.sessions.create({

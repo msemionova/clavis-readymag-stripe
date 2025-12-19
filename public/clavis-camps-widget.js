@@ -27,6 +27,7 @@
     var modalLastName = document.getElementById('campChildLast');
     var modalNote = document.getElementById('campModalNote');
     var modalAddBtn = document.getElementById('campModalAdd');
+    var modalDob = document.getElementById('campChildDob');
 
     var currentCourseKey = null;
     var courseIndex = {}; // courseKey -> { title, discipline, variants[] }
@@ -50,6 +51,13 @@
       if (slot === 'morning') return 0;
       if (slot === 'afternoon') return 1;
       return 2;
+    }
+
+    function isValidHumanName(s) {
+      s = (s || '').trim();
+      if (!s) return false;
+      if (s.length > 60) return false;
+      return /^[A-Za-zÀ-ÖØ-öø-ÿ\s'-]+$/.test(s);
     }
 
     function sortVariantsArr(arr) {
@@ -394,11 +402,10 @@
           }
 
           var amount = variants[0] ? variants[0].amount : 0;
-          var freeSeats =
-            variants[0] && typeof variants[0].freeSeats === 'number'
-              ? variants[0].freeSeats
-              : null;
-          var isFull = freeSeats !== null && freeSeats <= 0;
+          var hasAnyFree = variants.some(function (v) {
+            return v.freeSeats == null || v.freeSeats > 0; // null = без лимита
+          });
+          var isFull = !hasAnyFree;
 
           rowsHtml +=
             '<article class="rm-camp-row" data-course-key="' +
@@ -478,6 +485,28 @@
       }
     }
 
+    function updateModalNote() {
+      var selectedId = modalSelect.value;
+      var v =
+        variants.find(function (x) {
+          return x.id === selectedId;
+        }) || variants[0];
+
+      if (!v) return;
+
+      if (typeof v.freeSeats === 'number') {
+        modalNote.textContent =
+          v.freeSeats > 0
+            ? 'Verfügbar: ' +
+              v.freeSeats +
+              ' Plätze. Bitte Namen und Geburtsdatum eingeben.'
+            : 'Ausgebucht. Bitte wählen Sie einen anderen Termin.';
+      } else {
+        modalNote.textContent =
+          'Bitte wählen Sie den Termin und geben Sie Name und Geburtsdatum ein.';
+      }
+    }
+
     function openModal(courseKey) {
       var course = courseIndex[courseKey];
       if (!course) return;
@@ -487,28 +516,38 @@
 
       modalSelect.innerHTML = '';
       var variants = course.variants;
+
       for (var i = 0; i < variants.length; i++) {
         var v = variants[i];
-        var slotLabel =
-          v.slot === 'morning'
-            ? 'Vormittag'
-            : v.slot === 'afternoon'
-            ? 'Nachmittag'
-            : '';
+
         var parts = [];
         if (v.periodLabel) parts.push(v.periodLabel);
         if (v.timeLabel) parts.push(v.timeLabel);
-        if (slotLabel) parts.push('(' + slotLabel + ')');
-        var text = parts.join(' · ');
+
+        // места
+        var seatsText = '';
+        if (typeof v.freeSeats === 'number') {
+          seatsText =
+            v.freeSeats > 0
+              ? ' · (Noch ' + v.freeSeats + ' Plätze)'
+              : ' · (Ausgebucht)';
+        }
+
+        var text = (parts.join(' · ') || v.title || v.id) + seatsText;
 
         var opt = document.createElement('option');
         opt.value = v.id;
-        opt.textContent = text || v.title || v.id;
+        opt.textContent = text;
+        if (typeof v.freeSeats === 'number' && v.freeSeats <= 0)
+          opt.disabled = true;
+
+        modalSelect.addEventListener('change', updateModalNote);
         modalSelect.appendChild(opt);
       }
 
       modalFirstName.value = '';
       modalLastName.value = '';
+      modalDob.value = '';
 
       modalNote.textContent = variants.length
         ? 'Bitte wählen Sie den Termin und geben Sie den Namen des Kindes ein.'
@@ -520,6 +559,24 @@
     function closeModal() {
       modal.classList.remove('open');
       currentCourseKey = null;
+    }
+
+    function isValidDobISO(dob) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dob)) return false;
+
+      const d = new Date(dob + 'T00:00:00Z');
+      if (Number.isNaN(d.getTime())) return false;
+
+      // защита от "47632": regex уже режет, но оставим смысловую проверку
+      const year = d.getUTCFullYear();
+      if (year < 1900 || year > new Date().getFullYear()) return false;
+
+      // пример: возраст 6..18
+      const now = new Date();
+      const age = (now.getTime() - d.getTime()) / (365.25 * 24 * 3600 * 1000);
+      if (age < 6 || age > 18) return false;
+
+      return true;
     }
 
     function setupModalHandlers(courseVariantsMap) {
@@ -538,8 +595,19 @@
 
         var fn = modalFirstName.value.trim();
         var ln = modalLastName.value.trim();
-        if (!fn || !ln) {
-          alert('Bitte Vorname und Nachname des Kindes eingeben.');
+        var dob = modalDob ? modalDob.value.trim() : '';
+
+        if (!isValidHumanName(fn) || !isValidHumanName(ln)) {
+          alert(
+            "Bitte geben Sie einen gültigen Vor- und Nachnamen ein (nur Buchstaben, Leerzeichen, - und ')."
+          );
+          return;
+        }
+
+        if (!isValidDobISO(dob)) {
+          alert(
+            'Bitte geben Sie ein gültiges Geburtsdatum ein (das Kind muss zwischen 5 und 19 Jahre alt sein)'
+          );
           return;
         }
 
@@ -577,6 +645,7 @@
           disciplineLabelDe: v.disciplineLabelDe,
           amount: v.amount,
           label: v.title + ' (' + (v.timeLabel || '') + ')',
+          childDob: dob,
         });
 
         closeModal();

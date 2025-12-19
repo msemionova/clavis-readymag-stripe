@@ -77,9 +77,6 @@ export default async function handler(req, res) {
       const discount = (pm.discount || 'full').toLowerCase();
       const timeLabel = pm.time_label || '';
 
-      const maxSeats = Number(pm.max_seats || 0);
-      const bookedSeats = Number(pm.booked_seats || 0);
-
       if (!slot) continue;
 
       if (!parent.slots[slot]) {
@@ -102,9 +99,13 @@ export default async function handler(req, res) {
         s.discPriceId = pr.id;
       }
 
-      if (timeLabel) s.timeLabel = timeLabel;
-      if (maxSeats) s.maxSeats = maxSeats;
-      if (bookedSeats) s.bookedSeats = bookedSeats;
+      if (discount === 'full') {
+        if (timeLabel) s.timeLabel = timeLabel;
+        if (pm.max_seats !== undefined && pm.max_seats !== '')
+          s.maxSeats = Number(pm.max_seats);
+        if (pm.booked_seats !== undefined && pm.booked_seats !== '')
+          s.bookedSeats = Number(pm.booked_seats);
+      }
     }
 
     const catalog: any[] = [];

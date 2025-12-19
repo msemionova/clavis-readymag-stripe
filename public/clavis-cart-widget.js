@@ -111,9 +111,17 @@
       return '€' + (cents / 100).toFixed(2);
     }
 
-    // === вспомогательные функции, как на бэке ===
     function norm(s) {
       return (s || '').trim().replace(/\s+/g, ' ').toLowerCase();
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
     }
 
     fab.addEventListener('click', function () {
@@ -224,7 +232,7 @@
           if (hasFullDayDiscount)
             labels.push(`−${FULL_DAY_DISCOUNT_EUR} € Ganztagsrabatt`);
 
-          var labelHtml = it.label;
+          var labelHtml = escapeHtml(it.label);
           if (labels.length) {
             labelHtml +=
               ' <span style="color:#16a34a; font-weight:500">' +
@@ -240,9 +248,9 @@
             labelHtml +
             '</div>' +
             '<div class="rm-d-sub">Kind: ' +
-            (it.childFirst || '') +
+            (escapeHtml(it.childFirst) || '') +
             ' ' +
-            (it.childLast || '') +
+            (escapeHtml(it.childLast) || '') +
             '</div>' +
             '</div>' +
             '<div>' +
@@ -270,7 +278,6 @@
       });
     });
 
-    // чекаут
     payBtn.addEventListener('click', function () {
       var state = window.CartStore;
       if (!state.items.length) {
@@ -280,6 +287,22 @@
       var email = (parentEmail.value || '').trim();
       if (!email) {
         alert('Geben Sie Ihre E-Mail-Adresse');
+        return;
+      }
+
+      var agb = document.getElementById('legalAgb');
+      var wid = document.getElementById('legalWiderruf');
+      var dsg = document.getElementById('legalDsgvo');
+
+      if (!agb || !wid || !dsg) {
+        alert('Bitte bestätigen Sie AGB/Widerruf/Datenschutz.');
+        return;
+      }
+
+      if (!agb.checked || !wid.checked || !dsg.checked) {
+        alert(
+          'Bitte bestätigen Sie AGB, Widerrufsbelehrung und Datenschutzerklärung.'
+        );
         return;
       }
 

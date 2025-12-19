@@ -50,11 +50,18 @@ export default async function handler(req, res) {
 
     try {
       // 1) тянем line_items с ценами и продуктами
-      const fullSession = await stripe.checkout.sessions.retrieve(session.id, {
-        expand: ['line_items.data.price.product'],
+      const liResp = await stripe.checkout.sessions.listLineItems(session.id, {
+        expand: ['data.price.product'],
+        limit: 100,
       });
 
-      const lineItems = fullSession.line_items?.data || [];
+      const lineItems = liResp.data || [];
+      console.log(
+        '[webhook] session',
+        session.id,
+        'lineItems=',
+        lineItems.length
+      );
 
       // сначала считаем инкремент по оригинальным ценам
       const incByOriginalPrice: Record<string, number> = {};
@@ -118,19 +125,20 @@ export default async function handler(req, res) {
 
         if (slotPrices.length === 0) continue;
 
-        const baseMeta: any = slotPrices[0].metadata || {};
-        const currentBooked = Number(baseMeta.booked_seats || 0);
-        const newBooked = currentBooked + inc;
-
         await Promise.all(
-          slotPrices.map((p) =>
-            stripe.prices.update(p.id, {
+          slotPrices.map(async (p) => {
+            const currentBooked = Number(
+              (p.metadata as any)?.booked_seats || 0
+            );
+            const newBooked = currentBooked + inc;
+
+            return stripe.prices.update(p.id, {
               metadata: {
                 ...(p.metadata || {}),
                 booked_seats: String(newBooked),
               },
-            })
-          )
+            });
+          })
         );
       }
     } catch (err) {

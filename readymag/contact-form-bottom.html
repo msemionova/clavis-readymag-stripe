@@ -2,7 +2,7 @@
   <div class="clavis-layout">
     <div class="clavis-col clavis-col-title">
       <h2 class="clavis-title-bottom">
-        Du bist interessiert?<br />Sende uns eine Nachricht
+        Du bist interessiert?<br />Senden uns eine Nachricht
       </h2>
     </div>
 
@@ -85,40 +85,20 @@
             <label class="clavis-check">
               <input
                 class="clavis-checkbox"
-                id="agbInline"
-                name="agb"
-                type="checkbox"
-                required
-              />
-              <span>
-                Die
-                <a
-                  href="https://readymag.website/u612815371/5961069/agb"
-                  target="_blank"
-                  rel="noopener"
-                  >AGB</a
-                >
-                habe ich zur Kenntnis genommen
-              </span>
-            </label>
-            <div class="error" data-err-for="agb"></div>
-
-            <label class="clavis-check">
-              <input
-                class="clavis-checkbox"
                 id="privacyInline"
                 name="privacy"
                 type="checkbox"
                 required
               />
               <span>
+                Ich habe die
                 <a
                   href="https://readymag.website/u612815371/5961069/datenschutz"
                   target="_blank"
                   rel="noopener"
                   >Datenschutzerklärung</a
                 >
-                gelesen und nehme sie zur Kenntnis
+                zur Kenntnis genommen
               </span>
             </label>
             <div class="error" data-err-for="privacy"></div>
@@ -185,6 +165,22 @@
       if (statusEl) statusEl.textContent = '';
     };
 
+    function isValidHumanName(s) {
+      s = (s || '').trim();
+      if (!s) return false;
+      if (s.length > 60) return false;
+      return /^[A-Za-zÀ-ÖØ-öø-ÿ\s'-]+$/.test(s);
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
     const validate = () => {
       let ok = true;
 
@@ -211,6 +207,16 @@
         ok = false;
       } else setErr('childName', '');
 
+      if (!isValidHumanName(name)) {
+        setErr('name', 'Bitte geben Sie Ihren Namen ein.');
+        ok = false;
+      } else setErr('name', '');
+
+      if (!isValidHumanName(childName)) {
+        setErr('childName', 'Bitte geben Sie den Namen Ihres Kindes ein.');
+        ok = false;
+      } else setErr('childName', '');
+
       if (!email) {
         setErr('email', 'Bitte geben Sie Ihre E-Mail ein.');
         ok = false;
@@ -227,10 +233,6 @@
         ok = false;
       } else setErr('phone', '');
 
-      if (!form.agb.checked) {
-        setErr('agb', 'Bitte bestätigen Sie die AGB.');
-        ok = false;
-      } else setErr('agb', '');
       if (!form.privacy.checked) {
         setErr('privacy', 'Bitte bestätigen Sie die Datenschutzerklärung.');
         ok = false;
@@ -256,12 +258,11 @@
       if (statusEl) statusEl.textContent = 'Senden…';
 
       const payload = {
-        name: form.name.value.trim(),
-        childName: form.childName.value.trim(),
-        email: form.email.value.trim(),
-        phone: form.phone.value.trim(),
-        message: form.message.value.trim(),
-        agb: form.agb.checked,
+        name: escapeHtml(form.name.value.trim()),
+        childName: escapeHtml(form.childName.value.trim()),
+        email: escapeHtml(form.email.value.trim()),
+        phone: escapeHtml(form.phone.value.trim()),
+        message: escapeHtml(form.message.value.trim()),
         privacy: form.privacy.checked,
         page: location.href + '#footer-contact',
       };

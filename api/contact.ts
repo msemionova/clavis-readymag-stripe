@@ -31,20 +31,30 @@ export default async function handler(req: any, res: any) {
       .json({ error: 'E-Mail Service ist nicht konfiguriert.' });
   }
 
-  const { name, childName, email, phone, message, agb, privacy, page } =
-    (req.body || {}) as {
-      name?: string;
-      childName?: string;
-      email?: string;
-      phone?: string;
-      message?: string;
-      agb?: boolean;
-      privacy?: boolean;
-      page?: string;
-    };
+  const { name, childName, email, phone, message, privacy, page } = (req.body ||
+    {}) as {
+    name?: string;
+    childName?: string;
+    email?: string;
+    phone?: string;
+    message?: string;
+    privacy?: boolean;
+    page?: string;
+  };
 
-  // Простая серверная валидация (на случай, если кто-то обойдёт фронт)
-  if (!name || !childName || !email || !phone || !agb || !privacy) {
+  const nameRe = /^[A-Za-zÀ-ÖØ-öø-ÿ\s'-]{1,60}$/;
+
+  if (
+    !nameRe.test((name || '').trim()) ||
+    !nameRe.test((childName || '').trim())
+  ) {
+    return res.status(400).json({
+      error:
+        'Bitte geben Sie die korrekten Namen ein - in lateinischer Sprache, ohne unnötige Zeichen.',
+    });
+  }
+
+  if (!name || !childName || !email || !phone || !privacy) {
     return res
       .status(400)
       .json({ error: 'Bitte füllen Sie alle Pflichtfelder aus.' });
@@ -66,7 +76,6 @@ Name:        ${name}
 Kind:        ${childName}
 E-Mail:      ${email}
 Telefon:     ${phone}
-AGB:         ${agb ? 'ja' : 'nein'}
 Datenschutz: ${privacy ? 'ja' : 'nein'}
 Seite:       ${page || '-'}
 
@@ -76,7 +85,6 @@ ${message || '(keine Nachricht)'}
 
   try {
     const { error } = await resend.emails.send({
-      // Пока используем стандартный отправитель Resend
       from: 'Clavis Kontaktformular <onboarding@resend.dev>',
       to,
       subject,

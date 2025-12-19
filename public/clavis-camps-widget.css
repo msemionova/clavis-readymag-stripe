@@ -50,7 +50,7 @@
   padding-top: 14px;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
   .rm-camp-row {
     grid-template-columns: 1fr;
     row-gap: 6px;
@@ -278,7 +278,7 @@
   position: relative;
   left: 0;
   right: 0;
-  top: -24%;
+  top: -175px;
   transform: translateY(-50%);
   display: flex;
   justify-content: space-around;
@@ -422,4 +422,143 @@
 }
 .rm-empty-season__text {
   margin-bottom: 8px;
+}
+
+/* ===========================
+   RESPONSIVE OVERRIDES (SAFE)
+   вставь В КОНЕЦ файла
+   =========================== */
+
+/* чтобы паддинги не раздували ширину блоков */
+.rm-camps-grid,
+.rm-list-wrapper,
+.rm-all-link-wrap,
+.rm-group,
+.rm-empty-season {
+  box-sizing: border-box;
+}
+
+/* 1) На десктопе ничего не меняем визуально, только делаем контейнеры "резиновыми"
+      БЕЗ смещений и без vw-магии: */
+.rm-camps-grid,
+.rm-list-wrapper,
+.rm-all-link-wrap {
+  width: 100%;
+}
+
+/* 2) Планшет ≤1024: чуть уменьшаем зазоры и делаем левую колонку группы уже */
+@media (max-width: 1024px) {
+  .rm-group {
+    grid-template-columns: 120px minmax(0, 1fr);
+    column-gap: 24px;
+  }
+
+  .rm-camp-row {
+    column-gap: 24px;
+    padding-bottom: 28px;
+  }
+
+  /* табы: чтобы не распирали по бокам */
+  .rm-season-tabs {
+    padding: 0 4vw;
+  }
+
+  /* заголовок — убираем микро-смещение на узких экранах (оно и даёт ощущение “уехало”) */
+  .rm-season-title-wrapper {
+    left: 0;
+  }
+
+  /* список/плейсхолдер: добавим безопасные внутренние отступы,
+     чтобы на планшете не “липло” к краям, но и не вылезало */
+  .rm-camps-grid,
+  .rm-list-wrapper,
+  .rm-all-link-wrap,
+  .rm-empty-season {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+}
+
+/* 3) Мобилка ≤768: НЕ “резко половина”, а нормальная ширина + аккуратные паддинги */
+@media (max-width: 768px) {
+  /* твой .rm-camp-row уже становится 1 колонкой — оставляем,
+     но улучшаем отступы и выравнивание */
+  .rm-camp-row {
+    row-gap: 8px;
+    padding: 18px 0;
+  }
+
+  /* группа: на мобиле лучше в одну колонку, чтобы левый столбец не отъедал ширину */
+  .rm-group {
+    grid-template-columns: 1fr;
+    row-gap: 10px;
+    column-gap: 0;
+  }
+
+  .rm-group-label {
+    white-space: normal;
+  }
+
+  /* контейнеры — ровно по экрану, с мягкими отступами */
+  .rm-camps-grid,
+  .rm-list-wrapper,
+  .rm-all-link-wrap,
+  .rm-empty-season {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  /* табы: уменьшаем размер и делаем более стабильные отступы */
+  .rm-season-tab {
+    font-size: 16px;
+  }
+  .rm-season-tabs {
+    padding: 0 14px;
+    justify-content: space-between;
+  }
+
+  /* заголовок: меньше, чтобы влезал */
+  .rm-season-title {
+    font-size: 26px;
+    line-height: 1.05;
+  }
+}
+
+/* ===== Modal responsive fix ===== */
+
+/* всегда центр + безопасные отступы от краёв экрана */
+.rm-modal {
+  padding: 16px; /* чтобы диалог не прилипал к краям */
+  box-sizing: border-box;
+  z-index: 99999;
+}
+
+/* диалог всегда влезает в viewport, если надо — внутри появится скролл */
+.rm-modal__dialog {
+  width: min(520px, 100%);
+  max-height: calc(100dvh - 32px); /* 16px сверху + 16px снизу */
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* на мобиле делаем компактнее */
+@media (max-width: 768px) {
+  .rm-modal {
+    padding: 12px;
+  }
+
+  .rm-modal__dialog {
+    padding: 18px 18px;
+    max-height: calc(100dvh - 24px);
+  }
+
+  .rm-modal__close {
+    top: 14px;
+    right: 14px;
+  }
+
+  .rm-modal__title {
+    font-size: 16px;
+    margin-bottom: 10px;
+  }
 }
