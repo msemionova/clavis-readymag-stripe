@@ -160,7 +160,6 @@
           });
         }
         byChild.get(key).items.push({
-          camp: it.camp_type,
           slot: it.slot,
           idx: idx, // запоминаем индекс в корзине
         });

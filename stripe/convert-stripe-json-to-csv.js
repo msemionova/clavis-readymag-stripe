@@ -71,7 +71,7 @@ async function convertProducts() {
   // Формат CSV для импорта продуктов (ваш формат)
   const csvLines = [
     // Заголовок (ваш формат)
-    'id,object,active,name,description,images,metadata[readymag_page],metadata[camp_page],metadata[product_id],metadata[title],metadata[time_label],metadata[camp_type],metadata[season],metadata[discipline_key],metadata[period_label],metadata[age_label],metadata[original_price_id],metadata[pricing],metadata[slot],metadata[childLast],metadata[childFirst]',
+    'id,object,active,name,description,images,metadata[readymag_page],metadata[product_id],metadata[title],metadata[time_label],metadata[season],metadata[discipline_key],metadata[period_label],metadata[age_label],metadata[original_price_id],metadata[pricing],metadata[slot]',
   ];
 
   products.forEach((product) => {
@@ -94,24 +94,20 @@ async function convertProducts() {
       `"${escapeCSVField(product.description || '')}"`,
       `"${escapeCSVField(imagesString)}"`,
       `"${escapeCSVField(metadata.readymag_page || '')}"`,
-      `"${escapeCSVField(metadata.camp_page || '')}"`,
       `"${escapeCSVField(metadata.product_id || '')}"`,
       `"${escapeCSVField(metadata.title || '')}"`,
       `"${escapeCSVField(metadata.time_label || '')}"`,
-      `"${escapeCSVField(metadata.camp_type || '')}"`,
       `"${escapeCSVField(metadata.season || 'winter_2026')}"`,
       `"${escapeCSVField(
         metadata.discipline_key || getDisciplineKey(product.name)
       )}"`,
-      `"${escapeCSVField(metadata.period_label || '02 – 06 Februar')}"`,
+      `"${escapeCSVField(metadata.period_label || '02 - 06 Februar')}"`,
       `"${escapeCSVField(metadata.age_label || getAgeLabel(product.name))}"`,
       `"${escapeCSVField(metadata.original_price_id || '')}"`,
       `"${escapeCSVField(metadata.pricing || '')}"`,
       `"${escapeCSVField(
         metadata.slot || getSlotFromTime(metadata.time_label)
       )}"`,
-      `"${escapeCSVField(metadata.childLast || '')}"`,
-      `"${escapeCSVField(metadata.childFirst || '')}"`,
     ].join(',');
 
     csvLines.push(csvRow);

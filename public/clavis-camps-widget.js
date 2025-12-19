@@ -622,7 +622,6 @@
         }
 
         window.CartStore.add({
-          camp_type: v.disciplineLabelDe || v.disciplineKey || '',
           slot: v.slot,
           childFirst: fn,
           childLast: ln,
@@ -640,7 +639,6 @@
           ageLabel: v.ageLabel,
           season: v.season,
           disciplineKey: v.disciplineKey,
-          disciplineLabelDe: v.disciplineLabelDe,
           amount: v.amount,
           label: v.title + ' (' + (v.timeLabel || '') + ')',
           childDob: dob,

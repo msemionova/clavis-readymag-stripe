@@ -257,11 +257,9 @@ class EnhancedStripeBackup {
         { id: 'url', title: 'Url' },
         { id: 'tax_code', title: 'Tax Code' },
         { id: 'readymag_page', title: 'readymag_page (metadata)' },
-        { id: 'camp_page', title: 'camp_page (metadata)' },
         { id: 'product_id', title: 'product_id (metadata)' },
         { id: 'title', title: 'title (metadata)' },
         { id: 'time_label', title: 'time_label (metadata)' },
-        { id: 'camp_type', title: 'camp_type (metadata)' },
         { id: 'season', title: 'season (metadata)' },
         { id: 'discipline_key', title: 'discipline_key (metadata)' },
         { id: 'period_label', title: 'period_label (metadata)' },
@@ -291,11 +289,9 @@ class EnhancedStripeBackup {
         url: product.url || '',
         tax_code: product.tax_code || '',
         readymag_page: metadata.readymag_page || '',
-        camp_page: metadata.camp_page || '',
         product_id: metadata.product_id || '',
         title: metadata.title || '',
         time_label: metadata.time_label || '',
-        camp_type: metadata.camp_type || '',
         season: metadata.season || '',
         discipline_key: metadata.discipline_key || '',
         period_label: metadata.period_label || '',
@@ -303,8 +299,6 @@ class EnhancedStripeBackup {
         original_price_id: metadata.original_price_id || '',
         pricing: metadata.pricing || '',
         slot: metadata.slot || '',
-        childLast: metadata.childLast || '',
-        childFirst: metadata.childFirst || '',
       };
     });
 

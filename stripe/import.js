@@ -74,11 +74,9 @@ async function importProductsAndPrices() {
     const metadata = {};
     setMeta(metadata, 'external_product_id', externalId);
     setMeta(metadata, 'readymag_page', row['metadata[readymag_page]']);
-    setMeta(metadata, 'camp_page', row['metadata[camp_page]']);
     setMeta(metadata, 'product_id', row['metadata[product_id]']);
     setMeta(metadata, 'title', row['metadata[title]']);
     setMeta(metadata, 'time_label', row['metadata[time_label]']);
-    setMeta(metadata, 'camp_type', row['metadata[camp_type]']);
     setMeta(metadata, 'season', row['metadata[season]']);
     setMeta(metadata, 'discipline_key', row['metadata[discipline_key]']);
     setMeta(metadata, 'period_label', row['metadata[period_label]']);
@@ -86,8 +84,6 @@ async function importProductsAndPrices() {
     setMeta(metadata, 'original_price_id', row['metadata[original_price_id]']);
     setMeta(metadata, 'pricing', row['metadata[pricing]']);
     setMeta(metadata, 'slot', row['metadata[slot]']);
-    setMeta(metadata, 'childLast', row['metadata[childLast]']);
-    setMeta(metadata, 'childFirst', row['metadata[childFirst]']);
 
     const productBody = {
       name: row.name,

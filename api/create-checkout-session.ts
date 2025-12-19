@@ -28,7 +28,6 @@ export default async function handler(req, res) {
     const { email, items } = req.body as {
       email: string;
       items: Array<{
-        camp_type?: string;
         slot: 'morning' | 'afternoon';
         childFirst: string;
         childLast: string;
@@ -38,6 +37,7 @@ export default async function handler(req, res) {
         title?: string;
         periodLabel?: string;
         timeLabel?: string;
+        disciplineKey?: string;
         childDob?: string;
       }>;
     };
@@ -137,8 +137,10 @@ export default async function handler(req, res) {
       first: string;
       last: string;
       items: Array<{
-        camp?: string;
         slot: string;
+        periodLabel?: string;
+        timeLabel?: string;
+        disciplineKey?: string;
       }>;
     };
 
@@ -154,8 +156,10 @@ export default async function handler(req, res) {
         });
       }
       byChild.get(key)!.items.push({
-        camp: it.camp_type,
         slot: it.slot,
+        periodLabel: it.periodLabel || '',
+        timeLabel: it.timeLabel || '',
+        disciplineKey: it.disciplineKey || '',
       });
     }
 
@@ -195,9 +199,6 @@ export default async function handler(req, res) {
     }
 
     // ========= Остальная логика (line_items, summary) =========
-
-    const capFirst = (s?: string) =>
-      s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
 
     const nameRe = /^[A-Za-zÀ-ÖØ-öø-ÿ\s'-]{1,60}$/;
 
@@ -274,8 +275,7 @@ export default async function handler(req, res) {
           ? it.prices.discPriceId
           : it.prices.fullPriceId;
 
-      const courseTitle =
-        it.title || (it.camp_type ? `Camp ${capFirst(it.camp_type)}` : 'Camp');
+      const courseTitle = it.title;
 
       const labels: string[] = [];
       if (applySiblingDiscount) labels.push('Geschwisterrabatt −10%');
@@ -294,6 +294,9 @@ export default async function handler(req, res) {
 
       const periodLabel =
         (it as any).periodLabel || (it as any).period_label || '';
+
+      const disciplineKey =
+        (it as any).disciplineKey || (it as any).discipline_key || '';
 
       if (periodLabel) {
         descParts.push(periodLabel);
@@ -315,7 +318,6 @@ export default async function handler(req, res) {
             name: courseTitleFinal,
             description,
             metadata: {
-              camp_type: it.camp_type || '',
               slot: it.slot,
               childFirst: it.childFirst,
               childLast: it.childLast,
@@ -323,6 +325,7 @@ export default async function handler(req, res) {
               title: it.title || '',
               period_label: periodLabel,
               time_label: timeLabel,
+              discipline_key: disciplineKey,
               product_id: (it as any).productId || '',
               child_dob: (it as any).childDob || '',
               discount_type: applySiblingDiscount
@@ -339,8 +342,7 @@ export default async function handler(req, res) {
     const orderSummary = Array.from(byChild.values())
       .map((ch) => {
         const parts = ch.items.map((x) => {
-          const camp = x.camp ? `${x.camp}` : 'Camp';
-          return `${camp} ${x.slot}`;
+          return `${x.disciplineKey} ${x.periodLabel} ${x.timeLabel}`;
         });
         return `${ch.first} ${ch.last}: ${parts.join(', ')}`;
       })

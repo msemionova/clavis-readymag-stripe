@@ -14,9 +14,9 @@
       "marketing_features": [],
       "metadata": {
         "age_label": "8-11 Jahre",
-        "discipline_key": "animation",
+        "discipline_key": "animation_studio",
         "external_product_id": "prod_animation_afternoon",
-        "period_label": "02 – 06 Februar",
+        "period_label": "02 - 06 Februar",
         "readymag_page": "animation_studio",
         "season": "winter_2026"
       },
@@ -43,9 +43,9 @@
       "marketing_features": [],
       "metadata": {
         "age_label": "8-11 Jahre",
-        "discipline_key": "drawing",
+        "discipline_key": "digital_illustration",
         "external_product_id": "prod_illustration_morning",
-        "period_label": "02 – 06 Februar",
+        "period_label": "02 - 06 Februar",
         "readymag_page": "digital_illustration",
         "season": "winter_2026"
       },
@@ -72,9 +72,9 @@
       "marketing_features": [],
       "metadata": {
         "age_label": "12-16 Jahre",
-        "discipline_key": "drawing",
+        "discipline_key": "digital_3d",
         "external_product_id": "prod_3d_morning",
-        "period_label": "02 – 06 Februar",
+        "period_label": "02 - 06 Februar",
         "readymag_page": "digital_3d",
         "season": "winter_2026"
       },
@@ -101,9 +101,9 @@
       "marketing_features": [],
       "metadata": {
         "age_label": "10+ Jahre",
-        "discipline_key": "drawing",
+        "discipline_key": "manga_storytelling",
         "external_product_id": "prod_manga_storytelling_morning_afternoon",
-        "period_label": "02 – 06 Februar",
+        "period_label": "02 - 06 Februar",
         "readymag_page": "manga_storytelling",
         "season": "winter_2026"
       },
@@ -132,7 +132,7 @@
         "age_label": "10+ Jahre",
         "discipline_key": "fashion_design",
         "external_product_id": "prod_fashion_morning",
-        "period_label": "02 – 06 Februar",
+        "period_label": "02 - 06 Februar",
         "readymag_page": "fashion_design",
         "season": "winter_2026"
       },
