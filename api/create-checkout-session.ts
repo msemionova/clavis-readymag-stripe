@@ -342,7 +342,7 @@ export default async function handler(req, res) {
     const orderSummary = Array.from(byChild.values())
       .map((ch) => {
         const parts = ch.items.map((x) => {
-          return `${x.disciplineKey} ${x.periodLabel} ${x.timeLabel}`;
+          return `${x.disciplineKey} · ${x.periodLabel} · ${x.timeLabel}`;
         });
         return `${ch.first} ${ch.last}: ${parts.join(', ')}`;
       })

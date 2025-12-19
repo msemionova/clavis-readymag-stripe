@@ -20,7 +20,8 @@
     "backup": "node stripe/backup.js",
     "backup:list": "node stripe/backup.js list",
     "backup:restore": "node stripe/backup.js restore",
-    "convert": "node stripe/convert-stripe-json-to-csv.js"
+    "convert": "node stripe/convert-stripe-json-to-csv.js",
+    "export": "sh stripe/export.sh"
   },
   "dependencies": {
     "csv-parser": "^3.2.0",
