@@ -18,9 +18,7 @@
         "logical_price_id": "price_animation_afternoon_disc10",
         "max_seats": "12",
         "slot": "afternoon",
-        "time_label": "13:00–16:00",
-        "time_label_afternoon": "13:00–16:00",
-        "week": "1"
+        "time_label": "13:00-16:00"
       },
       "nickname": "Afternoon 10% Discount",
       "product": "prod_TYAFOUlVghdyuV",
@@ -49,9 +47,7 @@
         "logical_price_id": "price_animation_afternoon_full",
         "max_seats": "12",
         "slot": "afternoon",
-        "time_label": "13:00–16:00",
-        "time_label_afternoon": "13:00–16:00",
-        "week": "1"
+        "time_label": "13:00-16:00"
       },
       "nickname": "Afternoon Full Price",
       "product": "prod_TYAFOUlVghdyuV",
@@ -80,9 +76,7 @@
         "logical_price_id": "price_illustration_morning_disc10",
         "max_seats": "12",
         "slot": "morning",
-        "time_label": "09:30–12:30",
-        "time_label_morning": "09:30–12:30",
-        "week": "1"
+        "time_label": "09:30-12:30"
       },
       "nickname": "Morning 10% Discount",
       "product": "prod_TYAFlhnrvgxLpF",
@@ -111,9 +105,7 @@
         "logical_price_id": "price_illustration_morning_full",
         "max_seats": "12",
         "slot": "morning",
-        "time_label": "09:30–12:30",
-        "time_label_morning": "09:30–12:30",
-        "week": "1"
+        "time_label": "09:30-12:30"
       },
       "nickname": "Morning Full Price",
       "product": "prod_TYAFlhnrvgxLpF",
@@ -142,9 +134,7 @@
         "logical_price_id": "price_digital_morning_disc10",
         "max_seats": "12",
         "slot": "morning",
-        "time_label": "09:30–12:30",
-        "time_label_morning": "09:30–12:30",
-        "week": "1"
+        "time_label": "09:30-12:30"
       },
       "nickname": "Morning 10% Discount",
       "product": "prod_TYAFbdkjXzlupy",
@@ -173,9 +163,7 @@
         "logical_price_id": "price_digital_morning_full",
         "max_seats": "12",
         "slot": "morning",
-        "time_label": "09:30–12:30",
-        "time_label_morning": "09:30–12:30",
-        "week": "1"
+        "time_label": "09:30-12:30"
       },
       "nickname": "Morning Full Price",
       "product": "prod_TYAFbdkjXzlupy",
@@ -204,9 +192,7 @@
         "logical_price_id": "price_manga_storytelling_morning_disc10",
         "max_seats": "12",
         "slot": "morning",
-        "time_label": "09:30–12:30",
-        "time_label_afternoon": "09:30–12:30",
-        "week": "1"
+        "time_label": "09:30-12:30"
       },
       "nickname": "Morning 10% Discount",
       "product": "prod_TYAFUAhYQXQtgP",
@@ -235,9 +221,7 @@
         "logical_price_id": "price_manga_storytelling_morning_full",
         "max_seats": "12",
         "slot": "morning",
-        "time_label": "09:30–12:30",
-        "time_label_afternoon": "09:30–12:30",
-        "week": "1"
+        "time_label": "09:30-12:30"
       },
       "nickname": "Morning Full Price",
       "product": "prod_TYAFUAhYQXQtgP",
@@ -266,9 +250,7 @@
         "logical_price_id": "price_manga_storytelling_afternoon_disc10",
         "max_seats": "12",
         "slot": "afternoon",
-        "time_label": "13:00–16:00",
-        "time_label_afternoon": "13:00–16:00",
-        "week": "1"
+        "time_label": "13:00-16:00"
       },
       "nickname": "Afternoon 10% Discount",
       "product": "prod_TYAFUAhYQXQtgP",
@@ -297,9 +279,7 @@
         "logical_price_id": "price_manga_storytelling_afternoon_full",
         "max_seats": "12",
         "slot": "afternoon",
-        "time_label": "13:00–16:00",
-        "time_label_afternoon": "13:00–16:00",
-        "week": "1"
+        "time_label": "13:00-16:00"
       },
       "nickname": "Afternoon Full Price",
       "product": "prod_TYAFUAhYQXQtgP",
@@ -328,9 +308,7 @@
         "logical_price_id": "price_fashion_morning_disc10",
         "max_seats": "12",
         "slot": "morning",
-        "time_label": "09:30–12:30",
-        "time_label_morning": "09:30–12:30",
-        "week": "1"
+        "time_label": "09:30-12:30"
       },
       "nickname": "Morning 10% Discount",
       "product": "prod_TYAFrDVQ3BkdTW",
@@ -359,9 +337,7 @@
         "logical_price_id": "price_fashion_morning_full",
         "max_seats": "12",
         "slot": "morning",
-        "time_label": "09:30–12:30",
-        "time_label_morning": "09:30–12:30",
-        "week": "1"
+        "time_label": "09:30-12:30"
       },
       "nickname": "Morning Full Price",
       "product": "prod_TYAFrDVQ3BkdTW",

@@ -71,7 +71,7 @@ async function convertProducts() {
   // Формат CSV для импорта продуктов (ваш формат)
   const csvLines = [
     // Заголовок (ваш формат)
-    'id,object,active,name,description,images,metadata[readymag_page],metadata[camp_page],metadata[product_id],metadata[title],metadata[time_label],metadata[camp_type],metadata[season],metadata[discipline_label_en],metadata[discipline_label_de],metadata[week_label],metadata[discipline_key],metadata[period_label],metadata[age_label],metadata[original_price_id],metadata[pricing],metadata[slot],metadata[week],metadata[childLast],metadata[childFirst]',
+    'id,object,active,name,description,images,metadata[readymag_page],metadata[camp_page],metadata[product_id],metadata[title],metadata[time_label],metadata[camp_type],metadata[season],metadata[discipline_key],metadata[period_label],metadata[age_label],metadata[original_price_id],metadata[pricing],metadata[slot],metadata[childLast],metadata[childFirst]',
   ];
 
   products.forEach((product) => {
@@ -101,13 +101,6 @@ async function convertProducts() {
       `"${escapeCSVField(metadata.camp_type || '')}"`,
       `"${escapeCSVField(metadata.season || 'winter_2026')}"`,
       `"${escapeCSVField(
-        metadata.discipline_label_en || getDisciplineEn(product.name)
-      )}"`,
-      `"${escapeCSVField(
-        metadata.discipline_label_de || getDisciplineDe(product.name)
-      )}"`,
-      `"${escapeCSVField(metadata.week_label || 'Woche 1')}"`,
-      `"${escapeCSVField(
         metadata.discipline_key || getDisciplineKey(product.name)
       )}"`,
       `"${escapeCSVField(metadata.period_label || '02 – 06 Februar')}"`,
@@ -117,7 +110,6 @@ async function convertProducts() {
       `"${escapeCSVField(
         metadata.slot || getSlotFromTime(metadata.time_label)
       )}"`,
-      `"${escapeCSVField(metadata.week || '1')}"`,
       `"${escapeCSVField(metadata.childLast || '')}"`,
       `"${escapeCSVField(metadata.childFirst || '')}"`,
     ].join(',');
@@ -166,7 +158,7 @@ async function convertPrices() {
   // Формат CSV для импорта цен (ваш формат)
   const csvLines = [
     // Заголовок (ваш формат)
-    'Price ID,Product ID,Product Name,Product Statement Descriptor,Product Tax Code,Description,Created (UTC),Amount,Currency,Interval,Interval Count,Usage Type,Aggregate Usage,Billing Scheme,Trial Period Days,Tax Behavior,full_day_discount_eur (metadata),booked_seats (metadata),max_seats (metadata),time_label (metadata),time_label_afternoon (metadata),time_label_morning (metadata),week (metadata),slot (metadata),discount (metadata)',
+    'Price ID,Product ID,Product Name,Product Statement Descriptor,Product Tax Code,Description,Created (UTC),Amount,Currency,Interval,Interval Count,Usage Type,Aggregate Usage,Billing Scheme,Trial Period Days,Tax Behavior,full_day_discount_eur (metadata),booked_seats (metadata),max_seats (metadata),time_label (metadata),slot (metadata),discount (metadata)',
   ];
 
   prices.forEach((price) => {
@@ -208,10 +200,6 @@ async function convertPrices() {
         ? 'disc10'
         : 'full');
 
-    // Определяем time_label_afternoon и time_label_morning
-    const isAfternoon = timeLabel.includes('13:00') || slot === 'afternoon';
-    const isMorning = timeLabel.includes('09:30') || slot === 'morning';
-
     // Формируем строку CSV
     const csvRow = [
       `"${price.id || ''}"`,
@@ -236,9 +224,6 @@ async function convertPrices() {
       `"${metadata.booked_seats || '0'}"`,
       `"${metadata.max_seats || '12'}"`,
       `"${escapeCSVField(timeLabel)}"`,
-      isAfternoon ? `"${escapeCSVField(timeLabel)}"` : '""',
-      isMorning ? `"${escapeCSVField(timeLabel)}"` : '""',
-      `"${metadata.week || productMetadata.week || '1'}"`,
       `"${slot}"`,
       `"${discount}"`,
     ].join(',');
@@ -277,24 +262,6 @@ function escapeCSVField(str) {
   return str.toString().replace(/"/g, '""');
 }
 
-function getDisciplineEn(productName) {
-  const name = (productName || '').toLowerCase();
-  if (name.includes('fashion')) return 'Fashion Design';
-  if (name.includes('manga') || name.includes('comics')) return 'Drawing';
-  if (name.includes('digital') || name.includes('drawing')) return 'Drawing';
-  if (name.includes('animation')) return 'Animation';
-  return 'Drawing';
-}
-
-function getDisciplineDe(productName) {
-  const name = (productName || '').toLowerCase();
-  if (name.includes('fashion')) return 'Fashion Design';
-  if (name.includes('manga') || name.includes('comics')) return 'Zeichnung';
-  if (name.includes('digital') || name.includes('drawing')) return 'Zeichnung';
-  if (name.includes('animation')) return 'Animation';
-  return 'Zeichnung';
-}
-
 function getDisciplineKey(productName) {
   const name = (productName || '').toLowerCase();
   if (name.includes('fashion')) return 'fashion_design';
@@ -322,7 +289,6 @@ function getSlotFromTime(timeLabel) {
 function getDescriptionFromPrice(price, metadata) {
   if (price.nickname) return price.nickname;
 
-  const amount = price.unit_amount ? price.unit_amount / 100 : 0;
   const slot = metadata.slot || getSlotFromTime(metadata.time_label);
   const discount = metadata.discount || 'full';
 

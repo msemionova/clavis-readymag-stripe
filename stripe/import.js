@@ -80,24 +80,12 @@ async function importProductsAndPrices() {
     setMeta(metadata, 'time_label', row['metadata[time_label]']);
     setMeta(metadata, 'camp_type', row['metadata[camp_type]']);
     setMeta(metadata, 'season', row['metadata[season]']);
-    setMeta(
-      metadata,
-      'discipline_label_en',
-      row['metadata[discipline_label_en]']
-    );
-    setMeta(
-      metadata,
-      'discipline_label_de',
-      row['metadata[discipline_label_de]']
-    );
-    setMeta(metadata, 'week_label', row['metadata[week_label]']);
     setMeta(metadata, 'discipline_key', row['metadata[discipline_key]']);
     setMeta(metadata, 'period_label', row['metadata[period_label]']);
     setMeta(metadata, 'age_label', row['metadata[age_label]']);
     setMeta(metadata, 'original_price_id', row['metadata[original_price_id]']);
     setMeta(metadata, 'pricing', row['metadata[pricing]']);
     setMeta(metadata, 'slot', row['metadata[slot]']);
-    setMeta(metadata, 'week', row['metadata[week]']);
     setMeta(metadata, 'childLast', row['metadata[childLast]']);
     setMeta(metadata, 'childFirst', row['metadata[childFirst]']);
 
@@ -173,17 +161,6 @@ async function importProductsAndPrices() {
     setMeta(priceBody.metadata, 'booked_seats', row['booked_seats (metadata)']);
     setMeta(priceBody.metadata, 'max_seats', row['max_seats (metadata)']);
     setMeta(priceBody.metadata, 'time_label', row['time_label (metadata)']);
-    setMeta(
-      priceBody.metadata,
-      'time_label_afternoon',
-      row['time_label_afternoon (metadata)']
-    );
-    setMeta(
-      priceBody.metadata,
-      'time_label_morning',
-      row['time_label_morning (metadata)']
-    );
-    setMeta(priceBody.metadata, 'week', row['week (metadata)']);
     setMeta(priceBody.metadata, 'slot', row['slot (metadata)']);
     setMeta(priceBody.metadata, 'discount', row['discount (metadata)']);
 

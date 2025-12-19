@@ -28,15 +28,12 @@ export default async function handler(req, res) {
     const { email, items } = req.body as {
       email: string;
       items: Array<{
-        week: number | string;
-        week_label?: string;
         camp_type?: string;
         slot: 'morning' | 'afternoon';
         childFirst: string;
         childLast: string;
         basePriceEUR?: number;
         prices: { fullPriceId: string; discPriceId: string };
-        // дополнительные поля, которые мы кладём из фронта
         productId?: string;
         title?: string;
         periodLabel?: string;
@@ -140,8 +137,6 @@ export default async function handler(req, res) {
       first: string;
       last: string;
       items: Array<{
-        week: string | number;
-        week_label?: string;
         camp?: string;
         slot: string;
       }>;
@@ -159,8 +154,6 @@ export default async function handler(req, res) {
         });
       }
       byChild.get(key)!.items.push({
-        week: it.week,
-        week_label: it.week_label,
         camp: it.camp_type,
         slot: it.slot,
       });
@@ -179,22 +172,6 @@ export default async function handler(req, res) {
     if (totalChildren === 1) {
       type DaySlotInfo = { morningIdx?: number; afternoonIdx?: number };
       const dayMap = new Map<string, DaySlotInfo>();
-
-      items.forEach((it, idx) => {
-        const slot = it.slot;
-        if (slot !== 'morning' && slot !== 'afternoon') return;
-
-        // считаем, что "день" = week; при желании можно усложнить ключ
-        const dayKey = String(it.week);
-
-        const info = dayMap.get(dayKey) || {};
-        if (slot === 'morning') {
-          if (info.morningIdx == null) info.morningIdx = idx;
-        } else if (slot === 'afternoon') {
-          if (info.afternoonIdx == null) info.afternoonIdx = idx;
-        }
-        dayMap.set(dayKey, info);
-      });
 
       // Для каждого дня, где есть и утро, и вторая половина, даём скидку на вторую половину дня
       for (const [, info] of dayMap.entries()) {
@@ -319,15 +296,12 @@ export default async function handler(req, res) {
         (it as any).periodLabel || (it as any).period_label || '';
 
       if (periodLabel) {
-        descParts.push(`Zeitraum: ${periodLabel}`);
-      } else if (it.week_label || it.week) {
-        descParts.push(`Woche: ${it.week_label || `W${it.week}`}`);
+        descParts.push(periodLabel);
       }
-
       const timeLabel = (it as any).timeLabel || (it as any).time_label || '';
 
       if (timeLabel) {
-        descParts.push(`Zeit: ${timeLabel}`);
+        descParts.push(timeLabel);
       }
 
       const description = descParts.join(' • ');
@@ -341,8 +315,6 @@ export default async function handler(req, res) {
             name: courseTitleFinal,
             description,
             metadata: {
-              week: String(it.week),
-              week_label: it.week_label || '',
               camp_type: it.camp_type || '',
               slot: it.slot,
               childFirst: it.childFirst,
@@ -367,9 +339,8 @@ export default async function handler(req, res) {
     const orderSummary = Array.from(byChild.values())
       .map((ch) => {
         const parts = ch.items.map((x) => {
-          const wk = x.week_label || `W${x.week}`;
           const camp = x.camp ? `${x.camp}` : 'Camp';
-          return `${camp} ${wk} ${x.slot}`;
+          return `${camp} ${x.slot}`;
         });
         return `${ch.first} ${ch.last}: ${parts.join(', ')}`;
       })

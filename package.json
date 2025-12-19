@@ -19,7 +19,8 @@
     "dry-run": "STRIPE_DRY_RUN=true node stripe/import.js",
     "backup": "node stripe/backup.js",
     "backup:list": "node stripe/backup.js list",
-    "backup:restore": "node stripe/backup.js restore"
+    "backup:restore": "node stripe/backup.js restore",
+    "convert": "node stripe/convert-stripe-json-to-csv.js"
   },
   "dependencies": {
     "csv-parser": "^3.2.0",

@@ -15,13 +15,10 @@
       "metadata": {
         "age_label": "8-11 Jahre",
         "discipline_key": "animation",
-        "discipline_label_de": "Animation",
-        "discipline_label_en": "Animation",
         "external_product_id": "prod_animation_afternoon",
         "period_label": "02 – 06 Februar",
         "readymag_page": "animation_studio",
-        "season": "winter_2026",
-        "week_label": "Woche 1"
+        "season": "winter_2026"
       },
       "name": "Animation studio: Stop-Motion",
       "package_dimensions": null,
@@ -47,13 +44,10 @@
       "metadata": {
         "age_label": "8-11 Jahre",
         "discipline_key": "drawing",
-        "discipline_label_de": "Zeichnung",
-        "discipline_label_en": "Drawing",
         "external_product_id": "prod_illustration_morning",
         "period_label": "02 – 06 Februar",
         "readymag_page": "digital_illustration",
-        "season": "winter_2026",
-        "week_label": "Woche 1"
+        "season": "winter_2026"
       },
       "name": "Digitales Zeichnen: Grafikdesign & Illustration",
       "package_dimensions": null,
@@ -79,13 +73,10 @@
       "metadata": {
         "age_label": "12-16 Jahre",
         "discipline_key": "drawing",
-        "discipline_label_de": "Zeichnung",
-        "discipline_label_en": "Drawing",
         "external_product_id": "prod_3d_morning",
         "period_label": "02 – 06 Februar",
         "readymag_page": "digital_3d",
-        "season": "winter_2026",
-        "week_label": "Woche 1"
+        "season": "winter_2026"
       },
       "name": "Digitales Zeichnen: 3D & Design",
       "package_dimensions": null,
@@ -111,13 +102,10 @@
       "metadata": {
         "age_label": "10+ Jahre",
         "discipline_key": "drawing",
-        "discipline_label_de": "Zeichnung",
-        "discipline_label_en": "Drawing",
         "external_product_id": "prod_manga_storytelling_morning_afternoon",
         "period_label": "02 – 06 Februar",
         "readymag_page": "manga_storytelling",
-        "season": "winter_2026",
-        "week_label": "Woche 1"
+        "season": "winter_2026"
       },
       "name": "Manga & Comics: Storytelling",
       "package_dimensions": null,
@@ -143,13 +131,10 @@
       "metadata": {
         "age_label": "10+ Jahre",
         "discipline_key": "fashion_design",
-        "discipline_label_de": "Fashion Design",
-        "discipline_label_en": "Fashion Design",
         "external_product_id": "prod_fashion_morning",
         "period_label": "02 – 06 Februar",
         "readymag_page": "fashion_design",
-        "season": "winter_2026",
-        "week_label": "Woche 1"
+        "season": "winter_2026"
       },
       "name": "Fashion Design: Moodboards & Styling",
       "package_dimensions": null,

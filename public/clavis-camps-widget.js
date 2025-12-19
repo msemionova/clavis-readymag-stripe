@@ -622,8 +622,6 @@
         }
 
         window.CartStore.add({
-          week: v.weekLabel || v.weekLabel,
-          week_label: v.weekLabel || '',
           camp_type: v.disciplineLabelDe || v.disciplineKey || '',
           slot: v.slot,
           childFirst: fn,

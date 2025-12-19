@@ -160,8 +160,6 @@
           });
         }
         byChild.get(key).items.push({
-          week: it.week,
-          week_label: it.week_label,
           camp: it.camp_type,
           slot: it.slot,
           idx: idx, // запоминаем индекс в корзине
@@ -176,20 +174,6 @@
 
       if (totalChildren === 1) {
         var dayMap = new Map(); // dayKey -> { morningIdx, afternoonIdx }
-
-        state.items.forEach(function (it, idx) {
-          var slot = it.slot;
-          if (slot !== 'morning' && slot !== 'afternoon') return;
-
-          var dayKey = String(it.week);
-          var info = dayMap.get(dayKey) || {};
-          if (slot === 'morning') {
-            if (info.morningIdx == null) info.morningIdx = idx;
-          } else if (slot === 'afternoon') {
-            if (info.afternoonIdx == null) info.afternoonIdx = idx;
-          }
-          dayMap.set(dayKey, info);
-        });
 
         dayMap.forEach(function (info) {
           if (info.morningIdx != null && info.afternoonIdx != null) {

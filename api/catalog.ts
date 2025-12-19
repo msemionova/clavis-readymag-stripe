@@ -52,12 +52,9 @@ export default async function handler(req, res) {
 
         ageLabel: meta.age_label || '',
         periodLabel: meta.period_label || '',
-        weekLabel: meta.week_label || '',
         season: meta.season || '',
 
         disciplineKey: meta.discipline_key || '',
-        disciplineLabelDe: meta.discipline_label_de || '',
-        disciplineLabelEn: meta.discipline_label_en || '',
         readymagPage: meta.readymag_page || '',
       };
 
@@ -131,12 +128,9 @@ export default async function handler(req, res) {
 
           ageLabel: base.ageLabel,
           periodLabel: base.periodLabel,
-          weekLabel: base.weekLabel,
           season: base.season,
 
           disciplineKey: base.disciplineKey,
-          disciplineLabelDe: base.disciplineLabelDe,
-          disciplineLabelEn: base.disciplineLabelEn,
           readymagPage: base.readymagPage,
 
           slot: slotKey,

@@ -37,13 +37,10 @@ class CSVValidatorYourFormat {
       'name',
       'metadata[discipline_key]',
       'metadata[age_label]',
-      'metadata[week_label]',
     ];
 
     const recommendedFields = [
       'metadata[season]',
-      'metadata[discipline_label_de]',
-      'metadata[discipline_label_en]',
       'metadata[period_label]',
       'description',
     ];
@@ -136,7 +133,6 @@ class CSVValidatorYourFormat {
         `   Discipline: ${product['metadata[discipline_key]'] || 'нет'}`
       );
       console.log(`   Age: ${product['metadata[age_label]'] || 'нет'}`);
-      console.log(`   Week: ${product['metadata[week_label]'] || 'нет'}`);
     }
   }
 
@@ -163,7 +159,6 @@ class CSVValidatorYourFormat {
       'booked_seats (metadata)',
       'max_seats (metadata)',
       'time_label (metadata)',
-      'week (metadata)',
     ];
 
     prices.forEach((row, index) => {
