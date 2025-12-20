@@ -18,7 +18,7 @@
         <span id="totalEUR">€0.00</span>
       </div>
 
-      <div>
+      <div class="rm-input-wrapper">
         <label class="rm-hint">E-mail</label>
         <input
           class="rm-input"
@@ -153,12 +153,147 @@
     transform: translateX(0);
     visibility: visible;
   }
-</style>
 
-<link
-  rel="stylesheet"
-  href="https://clavis-readymag-stripe.vercel.app/clavis-cart-widget.css"
-/>
+  .rm-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: min(440px, 95vw);
+    height: 100vh;
+    background: #fff;
+    transform: translateX(100%);
+    transition: transform 0.35s ease;
+    z-index: 60;
+    overflow: hidden;
+  }
+  .rm-drawer.open {
+    transform: translateX(0);
+  }
+
+  .rm-d-head {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    padding: 16px 18px;
+    box-sizing: border-box;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .rm-d-body {
+    position: absolute;
+    top: 60px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 16px 18px 20px;
+    box-sizing: border-box;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .rm-d-extra {
+    border-top: 1px solid #eee;
+    padding-top: 12px;
+    display: grid;
+    gap: 10px;
+  }
+
+  .rm-d-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px dashed #eee;
+  }
+  .rm-d-row:last-child {
+    border-bottom: 0;
+  }
+
+  .rm-d-title {
+    font-weight: 500;
+  }
+  .rm-d-sub {
+    color: #666;
+    font-size: 13px;
+    margin-top: 4px;
+  }
+
+  .rm-input-wrapper {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .rm-input,
+  .rm-select {
+    font-size: 12px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 6px 0 8px;
+    border: 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.45);
+    background: transparent;
+    outline: none;
+    font-weight: 500;
+    letter-spacing: -0.3px;
+    color: rgba(0, 0, 0, 1);
+  }
+  .rm-input:focus,
+  .rm-select:focus {
+    outline: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 1);
+  }
+
+  .rm-input::placeholder,
+  .rm-select::placeholder {
+    color: rgba(0, 0, 0, 0.2);
+  }
+
+  .rm-hint {
+    color: #666;
+    font-size: 12px;
+  }
+
+  .rm-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 500;
+    margin-bottom: 24px;
+  }
+
+  .rm-pay-wrapper {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .rm-pay {
+    width: 100%;
+    background-color: #000;
+    color: #fff;
+    padding: 13px 16px;
+  }
+
+  .rm-x {
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    border: none;
+    background: #ededed;
+    cursor: pointer;
+    font-size: 12px;
+    line-height: 1;
+  }
+</style>
 
 <script>
   window.ClavisConfig = {
