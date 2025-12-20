@@ -1,9 +1,8 @@
 <button class="rm-btn rm-cart-fab" id="cartFab">
-  Warenkorb
-  <span class="rm-cart-count" id="cartCount">0</span>
+  Warenkorb <span class="rm-cart-count" id="cartCount">0</span>
 </button>
 
-<aside class="rm-drawer" id="cartDrawer">
+<aside class="rm-drawer rm-drawer--hidden" id="cartDrawer">
   <div class="rm-d-head">
     <div style="font-weight: 500">Warenkorb</div>
     <button class="rm-x" id="closeDrawer">✕</button>
@@ -80,27 +79,7 @@
 </aside>
 
 <style>
-  .rm-legal {
-    display: flex;
-    flex-direction: column;
-    font-size: 10px;
-  }
-  .rm-check {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-  .rm-check input {
-    width: 10px;
-    height: 10px;
-  }
-  .rm-check a {
-    color: #000;
-    font-weight: 500;
-  }
-  .rm-check a:hover {
-    opacity: 0.75;
-  }
+  /* ---------- base UI ---------- */
   .rm-btn {
     font-weight: 500;
     font-size: 10px;
@@ -114,15 +93,14 @@
     letter-spacing: -0.3px;
     text-decoration: none;
   }
-  .rm-cart-fab {
-    position: fixed;
-    top: 4px;
-    right: 20px;
-    z-index: 40;
-    display: flex;
-    gap: 8px;
-    align-items: center;
+  .rm-btn:hover {
+    opacity: 0.75;
   }
+  .rm-btn[disabled] {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
   .rm-cart-count {
     background: #000;
     color: #fff;
@@ -131,50 +109,54 @@
     font-size: 9px;
     letter-spacing: -0.3px;
   }
+
+  /* FAB всегда поверх */
+  .rm-cart-fab {
+    position: fixed !important;
+    top: 12px !important;
+    right: 16px !important;
+    z-index: 2147483646 !important;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  /* ---------- Drawer (single source of truth) ---------- */
   .rm-drawer {
-    position: fixed;
-    top: 0;
-    right: 0;
+    position: fixed !important;
+    top: 0 !important;
+    right: 0 !important;
+    height: 100dvh !important;
     width: min(440px, 95vw);
-    height: 100vh;
     background: #fff;
+
     transform: translateX(100%);
-    transition: transform 0.35s ease;
-    z-index: 60;
-    overflow: hidden;
-    box-shadow: 0px 0px 18px rgba(0, 0, 0, 0.1);
+    transition: transform 0.28s ease;
+    will-change: transform;
+
+    z-index: 2147483647 !important;
+    box-shadow: 0 0 18px rgba(0, 0, 0, 0.1);
+
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    -webkit-overflow-scrolling: touch;
   }
 
   .rm-drawer--hidden {
     visibility: hidden;
   }
-
   .rm-drawer.open {
     transform: translateX(0);
     visibility: visible;
   }
 
-  .rm-drawer {
-    position: fixed;
-    top: 0;
-    right: 0;
-    width: min(440px, 95vw);
-    height: 100vh;
-    background: #fff;
-    transform: translateX(100%);
-    transition: transform 0.35s ease;
-    z-index: 60;
-    overflow: hidden;
-  }
-  .rm-drawer.open {
-    transform: translateX(0);
-  }
-
+  /* head sticky, body scroll */
   .rm-d-head {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
+    position: sticky !important;
+    top: 0 !important;
+    background: #fff;
+    z-index: 1;
     height: 60px;
     padding: 16px 18px;
     box-sizing: border-box;
@@ -185,14 +167,10 @@
   }
 
   .rm-d-body {
-    position: absolute;
-    top: 60px;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    flex: 1 1 auto !important;
     padding: 16px 18px 20px;
     box-sizing: border-box;
-    overflow-y: auto;
+    overflow-y: auto !important;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -247,10 +225,8 @@
   }
   .rm-input:focus,
   .rm-select:focus {
-    outline: none;
     border-bottom: 1px solid rgba(0, 0, 0, 1);
   }
-
   .rm-input::placeholder,
   .rm-select::placeholder {
     color: rgba(0, 0, 0, 0.2);
@@ -293,95 +269,44 @@
     font-size: 12px;
     line-height: 1;
   }
-  /* FAB всегда поверх */
-  .rm-cart-fab {
-    position: fixed !important;
-    top: 12px !important;
-    right: 16px !important;
-    z-index: 2147483646 !important;
+
+  /* legal block */
+  .rm-legal {
+    display: flex;
+    flex-direction: column;
+    font-size: 10px;
+  }
+  .rm-check {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .rm-check input {
+    width: 10px;
+    height: 10px;
+  }
+  .rm-check a {
+    color: #000;
+    font-weight: 500;
+  }
+  .rm-check a:hover {
+    opacity: 0.75;
   }
 
-  /* drawer всегда как flex-колонка, высота по viewport */
-  .rm-drawer {
-    position: fixed !important;
-    top: 0 !important;
-    right: 0 !important;
-    height: 100dvh !important;
-    z-index: 2147483647 !important;
-
-    width: min(440px, 95vw);
-    transform: translateX(100%);
-    transition: transform 0.28s ease;
-    background: #fff;
-
-    will-change: transform;
-    -webkit-overflow-scrolling: touch;
-
-    display: flex !important;
-    flex-direction: column !important;
-    overflow: hidden !important;
-  }
-
-  .rm-drawer.open {
-    transform: translateX(0);
-  }
-
-  /* header sticky, body scroll */
-  .rm-d-head {
-    position: sticky !important;
-    top: 0 !important;
-    background: #fff;
-    z-index: 1;
-  }
-
-  /* ВАЖНО: убрать абсолютное позиционирование, чтобы body растягивался */
-  .rm-d-body {
-    position: relative !important;
-    top: auto !important;
-    left: auto !important;
-    right: auto !important;
-    bottom: auto !important;
-
-    flex: 1 1 auto !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  /* overlay под drawer */
-  .rm-drawer-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.35);
-    z-index: 2147483645;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s ease;
-  }
-  .rm-drawer-overlay.open {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  /* блокируем скролл страницы при открытом drawer */
-  body.clavis-drawer-lock {
-    overflow: hidden !important;
-    touch-action: none;
-  }
-
-  /* аккуратный вид скидочных лейблов */
+  /* discount labels */
   .rm-discount-label {
     color: #16a34a;
     font-weight: 500;
   }
 
-  /* планшет */
+  /* tablet */
   @media (max-width: 1024px) {
     .rm-drawer {
       width: min(520px, 96vw);
     }
   }
 
-  /* мобилка */
+  /* mobile */
   @media (max-width: 768px) {
     .rm-drawer {
       width: 100vw;
@@ -400,9 +325,7 @@
     apiBase: 'https://clavis-readymag-stripe.vercel.app',
   };
 
-  if (window.ClavisCartInit) {
-    window.ClavisCartInit();
-  }
+  if (window.ClavisCartInit) window.ClavisCartInit();
 </script>
 
 <script src="https://clavis-readymag-stripe.vercel.app/clavis-cart-widget.js"></script>

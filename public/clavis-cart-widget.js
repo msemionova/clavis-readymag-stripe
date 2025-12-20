@@ -4,69 +4,13 @@
     var FULL_DAY_DISCOUNT_EUR = cfg.fullDayDiscount || 100;
     var API_BASE = cfg.apiBase || 'https://clavis-readymag-stripe.vercel.app';
 
-    if (window.CartStore) return;
-
-    // WARENKORB DOM
-    var drawer = document.getElementById('cartDrawer');
-    var cartList = document.getElementById('cartList');
-    var totalEUR = document.getElementById('totalEUR');
-    var parentEmail = document.getElementById('parentEmail');
-    var payBtn = document.getElementById('payBtn');
-    var cartCountEl = document.getElementById('cartCount');
-    var fab = document.getElementById('cartFab');
-    var closeBtn = document.getElementById('closeDrawer');
-
-    if (
-      !drawer ||
-      !cartList ||
-      !totalEUR ||
-      !parentEmail ||
-      !payBtn ||
-      !cartCountEl ||
-      !fab ||
-      !closeBtn
-    ) {
-      console.warn('Warenkorb-Widget: Einige Elemente fehlen');
+    // если Store уже живёт — просто принудительно перерисуем в ВИДИМЫЙ DOM
+    if (window.CartStore && window.__ClavisCartRebind) {
+      window.__ClavisCartRebind();
       return;
     }
+    if (window.CartStore) return;
 
-    // ===== Helper: move elements to BODY to avoid Readymag fixed+transform bugs
-    function moveToBody(el) {
-      if (el && el.parentElement !== document.body) {
-        document.body.appendChild(el);
-      }
-    }
-    moveToBody(fab);
-    moveToBody(drawer);
-
-    // ===== Overlay for drawer
-    var overlay = document.getElementById('cartDrawerOverlay');
-    if (!overlay) {
-      overlay = document.createElement('div');
-      overlay.id = 'cartDrawerOverlay';
-      overlay.className = 'rm-drawer-overlay';
-      document.body.appendChild(overlay);
-    }
-
-    function lockBody(lock) {
-      document.body.classList.toggle('clavis-drawer-lock', !!lock);
-    }
-
-    function openDrawer() {
-      moveToBody(fab);
-      moveToBody(drawer);
-      drawer.classList.add('open');
-      overlay.classList.add('open');
-      lockBody(true);
-    }
-
-    function closeDrawer() {
-      drawer.classList.remove('open');
-      overlay.classList.remove('open');
-      lockBody(false);
-    }
-
-    // ===== Store + bus
     var Bus = new EventTarget();
 
     var Store = {
@@ -111,10 +55,7 @@
         try {
           localStorage.setItem(
             'camp_cart_v1',
-            JSON.stringify({
-              items: this.items,
-              email: this.email,
-            })
+            JSON.stringify({ items: this.items, email: this.email })
           );
         } catch (e) {}
       },
@@ -131,7 +72,7 @@
     window.CartStore = Store;
     window.CartBus = Bus;
 
-    // CLEANUP paid=1
+    // CLEANUP after ?paid=1
     try {
       var params = new URLSearchParams(window.location.search);
       if (params.get('paid') === '1' && window.CartStore) {
@@ -142,6 +83,52 @@
         window.history.replaceState({}, '', newUrl);
       }
     } catch (e) {}
+
+    // ---------------------------
+    // Helpers: pick visible DOM node among duplicates (because RM responsive duplicates)
+    // ---------------------------
+    function isVisibleEl(el) {
+      if (!el) return false;
+      // hidden by display:none or not in layout
+      var rects = el.getClientRects();
+      if (!rects || !rects.length) return false;
+
+      var cs = window.getComputedStyle(el);
+      if (
+        !cs ||
+        cs.display === 'none' ||
+        cs.visibility === 'hidden' ||
+        cs.opacity === '0'
+      )
+        return false;
+
+      // if inside hidden parent, rects can still be 0; above already checked
+      return true;
+    }
+
+    function pickVisibleById(id) {
+      var nodes = document.querySelectorAll('#' + CSS.escape(id));
+      if (!nodes || !nodes.length) return null;
+      for (var i = 0; i < nodes.length; i++) {
+        if (isVisibleEl(nodes[i])) return nodes[i];
+      }
+      // fallback: first
+      return nodes[0];
+    }
+
+    // if you have multiple blocks, IDs repeat — we always resolve on-demand
+    function resolveDom() {
+      return {
+        drawer: pickVisibleById('cartDrawer'),
+        cartList: pickVisibleById('cartList'),
+        totalEUR: pickVisibleById('totalEUR'),
+        parentEmail: pickVisibleById('parentEmail'),
+        payBtn: pickVisibleById('payBtn'),
+        cartCountEl: pickVisibleById('cartCount'),
+        fab: pickVisibleById('cartFab'),
+        closeBtn: pickVisibleById('closeDrawer'),
+      };
+    }
 
     function formatEUR(cents) {
       return '€' + (cents / 100).toFixed(2);
@@ -155,11 +142,6 @@
       return String(it.periodLabel || it.period_label || '').trim();
     }
 
-    function getSlot(it) {
-      // slot может жить в it.slot, а может только в metadata (если где-то забыли положить)
-      return String(it.slot || it.slot_key || it.slotKey || '').toLowerCase();
-    }
-
     function escapeHtml(str) {
       return String(str || '')
         .replace(/&/g, '&amp;')
@@ -169,50 +151,27 @@
         .replace(/'/g, '&#039;');
     }
 
-    // ===== Open/close handlers
-    fab.addEventListener('click', function (e) {
-      e.preventDefault();
-      openDrawer();
-    });
+    // ---------------------------
+    // Render (always into visible elements)
+    // ---------------------------
+    var lastBound = null;
 
-    closeBtn.addEventListener('click', function (e) {
-      e.preventDefault();
-      closeDrawer();
-    });
+    function render(state) {
+      var dom = resolveDom();
+      if (!dom.drawer || !dom.cartList || !dom.totalEUR || !dom.cartCountEl)
+        return;
 
-    overlay.addEventListener('click', function () {
-      closeDrawer();
-    });
-
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && drawer.classList.contains('open')) {
-        closeDrawer();
-      }
-    });
-
-    window.CartBus.addEventListener('cart:open', function () {
-      openDrawer();
-    });
-
-    // ===== Render
-    window.CartStore.subscribe(function (state) {
-      cartCountEl.textContent = String(state.items.length);
-
-      // email restore
-      if (state.email && parentEmail && parentEmail.value !== state.email) {
-        parentEmail.value = state.email;
-      }
+      dom.cartCountEl.textContent = String(state.items.length);
 
       if (!state.items.length) {
-        cartList.innerHTML =
+        dom.cartList.innerHTML =
           '<div class="rm-hint">Der Warenkorb ist leer</div>';
-        totalEUR.textContent = '€0.00';
+        dom.totalEUR.textContent = '€0.00';
         return;
       }
 
-      // --- группируем по детям ---
+      // group by child
       var byChild = new Map();
-
       state.items.forEach(function (it, idx) {
         var key = norm(it.childFirst) + '|' + norm(it.childLast);
         if (!byChild.has(key)) {
@@ -222,76 +181,71 @@
             items: [],
           });
         }
-        byChild.get(key).items.push({
-          slot: getSlot(it),
-          idx: idx,
-        });
+        byChild
+          .get(key)
+          .items.push({ slot: String(it.slot || '').toLowerCase(), idx: idx });
       });
 
       var childKeys = Array.from(byChild.keys());
-      var siblingKeys = new Set(childKeys.slice(1));
+      var siblingKeys = new Set(childKeys.slice(1)); // all except first child
       var totalChildren = byChild.size;
 
-      // --- FULL DAY discount: индекс afternoon -> скидка ---
-      // ВАЖНО: ключ дня делаем period_label + productId (чтобы одинаковые period у разных продуктов не конфликтовали)
+      // full day: map idx -> discount cents
       var fullDayDiscountPerIndex = new Map();
 
       if (totalChildren === 1) {
-        var dayMap = new Map(); // dayKey -> { morningIdx, afternoonIdx }
+        var dayMap = new Map(); // periodLabel -> { morningIdx, afternoonIdx }
 
         state.items.forEach(function (it, idx) {
-          var slot = getSlot(it);
+          var slot = String(it.slot || '').toLowerCase();
           if (slot !== 'morning' && slot !== 'afternoon') return;
 
           var periodLabel = getPeriodLabel(it).toLowerCase();
-          var productId = String(
-            it.productId || it.product_id || ''
-          ).toLowerCase();
           if (!periodLabel) return;
 
-          var dayKey = productId + '__' + periodLabel;
-
-          var info = dayMap.get(dayKey) || {};
+          var info = dayMap.get(periodLabel) || {};
           if (slot === 'morning' && info.morningIdx == null)
             info.morningIdx = idx;
           if (slot === 'afternoon' && info.afternoonIdx == null)
             info.afternoonIdx = idx;
-          dayMap.set(dayKey, info);
+          dayMap.set(periodLabel, info);
         });
 
         dayMap.forEach(function (info) {
           if (info.morningIdx != null && info.afternoonIdx != null) {
-            var discountCents = Math.round(FULL_DAY_DISCOUNT_EUR * 100);
-            fullDayDiscountPerIndex.set(info.afternoonIdx, discountCents);
+            fullDayDiscountPerIndex.set(
+              info.afternoonIdx,
+              Math.round(FULL_DAY_DISCOUNT_EUR * 100)
+            );
           }
         });
       }
 
       var sum = 0;
 
-      cartList.innerHTML = state.items
+      dom.cartList.innerHTML = state.items
         .map(function (it, i) {
           var childKey = norm(it.childFirst) + '|' + norm(it.childLast);
           var isSibling = siblingKeys.has(childKey);
           var hasSiblingInCart = totalChildren >= 2;
           var applySiblingDiscount = hasSiblingInCart && isSibling;
 
-          // amount в корзине должен быть БАЗОВОЙ (full) суммой
+          // base (full) amount in cents
           var amount = Number(it.amount || 0);
 
-          // 1) sibling discount
+          // 1) sibling -10%
           var hasSiblingDiscount = false;
           if (applySiblingDiscount) {
             amount = Math.round(amount * 0.9);
             hasSiblingDiscount = true;
           }
 
-          // 2) full-day discount (только один ребёнок)
+          // 2) full-day -100€ for afternoon item
           var hasFullDayDiscount = false;
           if (totalChildren === 1 && fullDayDiscountPerIndex.has(i)) {
-            var dc = fullDayDiscountPerIndex.get(i) || 0;
-            amount = Math.max(0, amount - dc);
-            hasFullDayDiscount = dc > 0;
+            var discountCents = fullDayDiscountPerIndex.get(i) || 0;
+            amount = Math.max(0, amount - discountCents);
+            hasFullDayDiscount = discountCents > 0;
           }
 
           sum += amount;
@@ -307,7 +261,7 @@
           if (labels.length) {
             labelHtml +=
               ' <span class="rm-discount-label">' +
-              escapeHtml(labels.join(', ')) +
+              labels.join(', ') +
               '</span>';
           }
 
@@ -339,95 +293,165 @@
         })
         .join('');
 
-      totalEUR.textContent = formatEUR(sum);
+      dom.totalEUR.textContent = formatEUR(sum);
 
-      cartList.querySelectorAll('[data-remove]').forEach(function (btn) {
-        btn.addEventListener('click', function (e) {
-          e.preventDefault();
+      // remove handlers (bind to current visible list)
+      dom.cartList.querySelectorAll('[data-remove]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
           var idx = +btn.getAttribute('data-remove');
           window.CartStore.remove(idx);
         });
       });
-    });
+    }
 
-    // save email live
-    parentEmail.addEventListener('input', function () {
-      try {
-        window.CartStore.setEmail((parentEmail.value || '').trim());
-      } catch (e) {}
-    });
-
-    // PAY
-    payBtn.addEventListener('click', function () {
-      var state = window.CartStore;
-      if (!state.items.length) {
-        alert('Der Einkaufswagen ist leer');
+    // ---------------------------
+    // Bind events to visible DOM (and rebind on resize/orientation)
+    // ---------------------------
+    function bind() {
+      var dom = resolveDom();
+      if (
+        !dom.drawer ||
+        !dom.fab ||
+        !dom.closeBtn ||
+        !dom.payBtn ||
+        !dom.parentEmail
+      ) {
         return;
       }
 
-      var email = (parentEmail.value || '').trim();
-      if (!email) {
-        alert('Geben Sie Ihre E-Mail-Adresse');
+      // avoid double-binding to same visible nodes
+      if (
+        lastBound &&
+        lastBound.drawer === dom.drawer &&
+        lastBound.fab === dom.fab &&
+        lastBound.closeBtn === dom.closeBtn &&
+        lastBound.payBtn === dom.payBtn
+      ) {
+        // still ensure visible drawer has correct state
+        render(window.CartStore);
         return;
       }
+      lastBound = dom;
 
-      var agb = document.getElementById('legalAgb');
-      var wid = document.getElementById('legalWiderruf');
-      var dsg = document.getElementById('legalDsgvo');
+      // FAB open
+      dom.fab.addEventListener('click', function () {
+        dom.drawer.classList.add('open');
+      });
 
-      if (!agb || !wid || !dsg) {
-        alert('Bitte bestätigen Sie AGB/Widerruf/Datenschutz.');
-        return;
-      }
+      // close btn
+      dom.closeBtn.addEventListener('click', function () {
+        dom.drawer.classList.remove('open');
+      });
 
-      if (!agb.checked || !wid.checked || !dsg.checked) {
-        alert(
-          'Bitte bestätigen Sie AGB, Widerrufsbelehrung und Datenschutzerklärung.'
-        );
-        return;
-      }
+      // open from camps
+      window.CartBus.addEventListener('cart:open', function () {
+        var d = resolveDom();
+        if (d.drawer) d.drawer.classList.add('open');
+      });
 
-      state.setEmail(email);
+      // click outside to close (use capture + resolve current)
+      document.addEventListener(
+        'click',
+        function (e) {
+          var d = resolveDom();
+          if (!d.drawer || !d.drawer.classList.contains('open')) return;
+          if (d.drawer.contains(e.target)) return;
+          if (e.target.closest && e.target.closest('#cartFab')) return;
+          if (e.target.closest && e.target.closest('[data-remove]')) return;
+          d.drawer.classList.remove('open');
+        },
+        true
+      );
 
-      payBtn.disabled = true;
-      payBtn.textContent = 'Checkout wird erstellt…';
+      // pay
+      dom.payBtn.addEventListener('click', function () {
+        var d = resolveDom();
+        var state = window.CartStore;
+        if (!state.items.length) {
+          alert('Der Einkaufswagen ist leer');
+          return;
+        }
 
-      fetch(API_BASE + '/api/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: email,
-          items: state.items,
-        }),
-      })
-        .then(function (r) {
-          return r.json();
+        var email = (
+          d.parentEmail && d.parentEmail.value ? d.parentEmail.value : ''
+        ).trim();
+        if (!email) {
+          alert('Geben Sie Ihre E-Mail-Adresse');
+          return;
+        }
+
+        // IMPORTANT: these checkboxes also duplicated -> pick visible by id
+        var agb = pickVisibleById('legalAgb');
+        var wid = pickVisibleById('legalWiderruf');
+        var dsg = pickVisibleById('legalDsgvo');
+
+        if (!agb || !wid || !dsg) {
+          alert('Bitte bestätigen Sie AGB/Widerruf/Datenschutz.');
+          return;
+        }
+        if (!agb.checked || !wid.checked || !dsg.checked) {
+          alert(
+            'Bitte bestätigen Sie AGB, Widerrufsbelehrung und Datenschutzerklärung.'
+          );
+          return;
+        }
+
+        state.setEmail(email);
+
+        d.payBtn.disabled = true;
+        d.payBtn.textContent = 'Checkout wird erstellt…';
+
+        fetch(API_BASE + '/api/create-checkout-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, items: state.items }),
         })
-        .then(function (data) {
-          if (!data.url)
-            throw new Error('Es wurde keine Checkout-URL zurückgegeben.');
-          window.location.href = data.url;
-        })
-        .catch(function (err) {
-          console.error(err);
-          alert('Die Zahlung konnte nicht erstellt werden.');
-          payBtn.disabled = false;
-          payBtn.textContent = 'Zur Zahlung fortfahren';
-        });
+          .then(function (r) {
+            return r.json();
+          })
+          .then(function (data) {
+            if (!data.url)
+              throw new Error('Es wurde keine Checkout-URL zurückgegeben.');
+            window.location.href = data.url;
+          })
+          .catch(function (err) {
+            console.error(err);
+            alert('Die Zahlung konnte nicht erstellt werden.');
+            d.payBtn.disabled = false;
+            d.payBtn.textContent = 'Zur Zahlung fortfahren';
+          });
+      });
+
+      // make sure it's visible (if you use hidden class)
+      dom.drawer.classList.remove('rm-drawer--hidden');
+
+      // initial render into the now-correct DOM
+      render(window.CartStore);
+    }
+
+    // expose rebind (so if you call init again, it rebinds instead of exiting)
+    window.__ClavisCartRebind = function () {
+      bind();
+    };
+
+    // subscribe render
+    window.CartStore.subscribe(function (state) {
+      render(state);
     });
 
-    // IMPORTANT: убираем outside-click close (у нас теперь overlay)
-    // но оставим safety: если overlay по какой-то причине не вставился
-    document.addEventListener('click', function (e) {
-      if (!drawer.classList.contains('open')) return;
-      if (drawer.contains(e.target)) return;
-      if (e.target.closest('#cartFab')) return;
-      if (e.target.closest('[data-remove]')) return;
-      if (overlay && overlay.classList.contains('open')) return; // overlay сам закроет
-      closeDrawer();
-    });
+    // initial bind after layout settles
+    setTimeout(bind, 0);
 
-    drawer.classList.remove('rm-drawer--hidden');
+    // rebind on resize/orientation (Readymag switches layouts)
+    var t = null;
+    function scheduleRebind() {
+      clearTimeout(t);
+      t = setTimeout(function () {
+        bind();
+      }, 120);
+    }
+    window.addEventListener('resize', scheduleRebind);
+    window.addEventListener('orientationchange', scheduleRebind);
   }
 
   window.ClavisCartInit = function () {
