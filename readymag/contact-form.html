@@ -1,11 +1,26 @@
-<p class="clavis-open-btn">KONTAKTE</p>
+<!-- ====== CONTACT BUTTON ====== -->
+<p class="clavis-open-btn" id="clavisOpenBtn">KONTAKTE</p>
 
-<div id="clavisOverlay" class="clavis-overlay clavis-hidden">
-  <div class="clavis-modal">
-    <button class="clavis-close" type="button" aria-label="Schließen">✕</button>
+<!-- ====== OVERLAY + MODAL ====== -->
+<div id="clavisOverlay" class="clavis-overlay" aria-hidden="true">
+  <div
+    class="clavis-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="clavisTitle"
+  >
+    <button
+      class="clavis-close"
+      id="clavisCloseBtn"
+      type="button"
+      aria-label="Schließen"
+    >
+      ✕
+    </button>
+
     <div class="clavis-layout">
       <div class="clavis-col clavis-col-title">
-        <h2 class="clavis-title">
+        <h2 class="clavis-title" id="clavisTitle">
           Du bist interessiert?<br />Senden uns eine Nachricht
         </h2>
       </div>
@@ -54,6 +69,7 @@
                 type="email"
                 placeholder="E-Mail-Adresse"
                 required
+                autocomplete="email"
               />
               <div class="err" data-err-for="email"></div>
             </div>
@@ -67,6 +83,7 @@
                 placeholder="Telefonnummer"
                 required
                 inputmode="tel"
+                autocomplete="tel"
                 pattern="^[0-9+()\\s-]{6,}$"
               />
               <div class="err" data-err-for="phone"></div>
@@ -112,7 +129,6 @@
           </div>
 
           <button class="clavis-submit" type="submit">Nachricht senden</button>
-
           <div class="clavis-status" aria-live="polite"></div>
         </div>
       </form>
@@ -121,6 +137,7 @@
 </div>
 
 <style>
+  /* ===== Button ===== */
   .clavis-open-btn {
     position: relative;
     top: 14px;
@@ -128,42 +145,54 @@
     font-weight: 500;
     font-size: 10px;
     cursor: pointer;
+    z-index: 1000; /* must stay tappable above RM layers */
   }
 
+  /* ===== Overlay (IMPORTANT: closed state must NOT block scroll) ===== */
   .clavis-overlay {
     position: fixed;
     inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    z-index: 2147483647;
     background: rgba(0, 0, 0, 0.65);
-    z-index: 9999;
-    transition: opacity 0.2s ease;
-    padding: 25px;
-    overflow-y: auto;
+
+    display: none; /* KEY: not in layout when closed */
+    pointer-events: none; /* KEY */
+
+    box-sizing: border-box;
   }
 
-  .clavis-hidden {
-    opacity: 0;
-    pointer-events: none;
+  /* Open state */
+  .clavis-overlay.is-open {
+    display: flex;
+    pointer-events: auto;
+
+    justify-content: center;
+    align-items: center;
+
+    padding: 16px;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
+  /* ===== Modal ===== */
   .clavis-modal {
     position: relative;
-    width: 100%;
+    width: min(1100px, 100%);
+    max-height: calc(100dvh - 32px);
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+
     padding: 50px;
     border-radius: 0;
-    background: var(--rm-season-bg);
+    background: var(--rm-season-bg, #fff);
     box-shadow: none;
     box-sizing: border-box;
-    max-height: none;
-    overflow: visible;
   }
 
   .clavis-close {
     position: absolute;
-    top: 24px;
-    right: 28px;
+    top: 18px;
+    right: 18px;
     width: 32px;
     height: 32px;
     border-radius: 999px;
@@ -236,11 +265,6 @@
     border-bottom-color: #000;
   }
 
-  .clavis-field input.invalid,
-  .clavis-message-block textarea.invalid {
-    border-bottom-color: var(--rm-season-accentColor);
-  }
-
   .clavis-message-title {
     font-size: 14px;
     margin-bottom: 6px;
@@ -265,13 +289,9 @@
     gap: 5px;
     align-items: flex-start;
     font-size: 12px;
-    line-height: 1;
+    line-height: 1.2;
     color: #111;
     font-weight: 400;
-  }
-
-  .clavis-check input {
-    margin-top: 2px;
   }
 
   .clavis-check a {
@@ -282,12 +302,13 @@
   .clavis-checkbox {
     min-width: 14px;
     min-height: 14px;
+    margin-top: 2px;
   }
 
   .err {
     min-height: 16px;
     font-size: 11px;
-    color: var(--rm-season-accentColor);
+    color: var(--rm-season-accentColor, #d11);
   }
 
   .clavis-grid {
@@ -340,7 +361,7 @@
   }
 
   .clavis-status {
-    margin-top: 18px;
+    margin-top: 10px;
     font-size: 13px;
   }
 
@@ -352,25 +373,20 @@
     overflow: hidden;
   }
 
+  /* ===== Tablet + Mobile ===== */
   @media (max-width: 1024px) {
-    .clavis-overlay {
-      padding: 32px 16px 24px;
-      align-items: unset;
-    }
-
     .clavis-modal {
-      padding: 32px 28px 24px;
-      max-width: 100%;
-      overflow: auto;
+      padding: 24px 18px 18px;
     }
 
     .clavis-layout {
       grid-template-columns: 1fr;
-      row-gap: 24px;
+      row-gap: 18px;
     }
 
     .clavis-title {
-      font-size: 28px;
+      font-size: 24px;
+      line-height: 1.05;
     }
 
     .clavis-grid {
@@ -380,7 +396,7 @@
         'side'
         'button'
         'status';
-      row-gap: 20px;
+      row-gap: 16px;
     }
 
     .clavis-submit {
@@ -389,25 +405,20 @@
       text-align: center;
       margin-top: 8px;
     }
+
+    .clavis-close {
+      top: 12px;
+      right: 12px;
+      width: 30px;
+      height: 30px;
+      font-size: 16px;
+    }
   }
 </style>
 
 <script>
-  (function initContactWidget() {
+  (function () {
     const endpoint = 'https://clavis-readymag-stripe.vercel.app/api/contact';
-
-    function waitForElements() {
-      const overlay = document.getElementById('clavisOverlay');
-      const form = document.getElementById('clavisContactForm');
-      const openBtn = document.querySelector('.clavis-open-btn');
-
-      if (!overlay || !form || !openBtn) {
-        setTimeout(waitForElements, 100);
-        return;
-      }
-
-      setup(overlay, form, openBtn);
-    }
 
     function isValidHumanName(s) {
       s = (s || '').trim();
@@ -425,105 +436,120 @@
         .replace(/'/g, '&#039;');
     }
 
-    function setup(overlay, form, openBtn) {
-      const modal = overlay.querySelector('.clavis-modal');
-      const statusEl = form.querySelector('.clavis-status');
-      const submitBtn = form.querySelector('button[type="submit"]');
-      let createdAt = Date.now();
+    function init() {
+      const overlay = document.getElementById('clavisOverlay');
+      const form = document.getElementById('clavisContactForm');
+      const openBtn =
+        document.getElementById('clavisOpenBtn') ||
+        document.querySelector('.clavis-open-btn');
+      const closeBtn =
+        document.getElementById('clavisCloseBtn') ||
+        (overlay ? overlay.querySelector('.clavis-close') : null);
 
+      if (!overlay || !form || !openBtn || !closeBtn) return;
+
+      // IMPORTANT: move overlay to <body> to avoid Readymag transforms breaking fixed
       if (overlay.parentElement !== document.body) {
         document.body.appendChild(overlay);
       }
 
-      const openModal = () => {
-        createdAt = Date.now();
-        clearAll();
-        form.reset();
-        overlay.classList.remove('clavis-hidden');
-      };
+      const statusEl = form.querySelector('.clavis-status');
+      const submitBtn = form.querySelector('button[type="submit"]');
+      let createdAt = Date.now();
 
-      const closeModal = () => {
-        overlay.classList.add('clavis-hidden');
-        localStorage.setItem('clavisContactDismissed', '1');
-        form.reset();
-        clearAll();
-      };
-
-      openBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        openModal();
-      });
-
-      if (modal) {
-        const closeBtn = modal.querySelector('.clavis-close');
-        if (closeBtn) closeBtn.addEventListener('click', closeModal);
-      }
-
-      overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) closeModal();
-      });
-
-      document.addEventListener('keydown', (e) => {
-        if (
-          e.key === 'Escape' &&
-          !overlay.classList.contains('clavis-hidden')
-        ) {
-          closeModal();
-        }
-      });
-
-      const setErr = (name, msg) => {
-        const err = form.querySelector(`[data-err-for="${name}"]`);
+      function setErr(name, msg) {
+        const err = form.querySelector('[data-err-for="' + name + '"]');
         if (err) err.textContent = msg || '';
-        const input = form.querySelector(`[name="${name}"], #${name}`);
+        const input = form.querySelector('[name="' + name + '"], #' + name);
         if (
           input &&
           (input.tagName === 'INPUT' || input.tagName === 'TEXTAREA')
         ) {
           input.classList.toggle('invalid', !!msg);
         }
-      };
+      }
 
-      const clearAll = () => {
-        [...form.querySelectorAll('.err')].forEach((e) => (e.textContent = ''));
-        [...form.querySelectorAll('input,textarea')].forEach((el) =>
-          el.classList.remove('invalid')
-        );
+      function clearAll() {
+        Array.prototype.slice
+          .call(form.querySelectorAll('.err'))
+          .forEach(function (e) {
+            e.textContent = '';
+          });
+        Array.prototype.slice
+          .call(form.querySelectorAll('input,textarea'))
+          .forEach(function (el) {
+            el.classList.remove('invalid');
+          });
         if (statusEl) statusEl.textContent = '';
-      };
+      }
 
-      const validate = () => {
+      function open() {
+        createdAt = Date.now();
+        clearAll();
+        // do NOT lock body scroll (you explicitly asked)
+        overlay.classList.add('is-open');
+        overlay.setAttribute('aria-hidden', 'false');
+      }
+
+      function close() {
+        overlay.classList.remove('is-open');
+        overlay.setAttribute('aria-hidden', 'true');
+        clearAll();
+      }
+
+      openBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        open();
+      });
+
+      closeBtn.addEventListener('click', function () {
+        close();
+      });
+
+      overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) close();
+      });
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && overlay.classList.contains('is-open'))
+          close();
+      });
+
+      function validate() {
         let ok = true;
 
-        const name = form.name.value.trim();
-        const childName = form.childName.value.trim();
-        const email = form.email.value.trim();
-        const phone = form.phone.value.trim();
-        const message = form.message.value.trim();
-        const hp = form.website.value.trim();
+        const name = (
+          form.name && form.name.value ? form.name.value : ''
+        ).trim();
+        const childName = (
+          form.childName && form.childName.value ? form.childName.value : ''
+        ).trim();
+        const email = (
+          form.email && form.email.value ? form.email.value : ''
+        ).trim();
+        const phone = (
+          form.phone && form.phone.value ? form.phone.value : ''
+        ).trim();
+        const message = (
+          form.message && form.message.value ? form.message.value : ''
+        ).trim();
+        const hp = (
+          form.website && form.website.value ? form.website.value : ''
+        ).trim();
 
         if (hp) return { ok: false, bot: true };
+        if (Date.now() - createdAt < 1500) return { ok: false, bot: true };
 
-        if (Date.now() - createdAt < 3000) {
-          return { ok: false, bot: true };
-        }
-
-        if (name.length < 2) {
+        if (!name || name.length < 2 || !isValidHumanName(name)) {
           setErr('name', 'Bitte geben Sie Ihren Namen ein.');
           ok = false;
         } else setErr('name', '');
 
-        if (childName.length < 2) {
-          setErr('childName', 'Bitte geben Sie den Namen Ihres Kindes ein.');
-          ok = false;
-        } else setErr('childName', '');
-
-        if (!isValidHumanName(name)) {
-          setErr('name', 'Bitte geben Sie Ihren Namen ein.');
-          ok = false;
-        } else setErr('name', '');
-
-        if (!isValidHumanName(childName)) {
+        if (
+          !childName ||
+          childName.length < 2 ||
+          !isValidHumanName(childName)
+        ) {
           setErr('childName', 'Bitte geben Sie den Namen Ihres Kindes ein.');
           ok = false;
         } else setErr('childName', '');
@@ -544,7 +570,8 @@
           ok = false;
         } else setErr('phone', '');
 
-        if (!form.privacy.checked) {
+        const privacy = form.privacy && form.privacy.checked;
+        if (!privacy) {
           setErr('privacy', 'Bitte bestätigen Sie die Datenschutzerklärung.');
           ok = false;
         } else setErr('privacy', '');
@@ -555,69 +582,75 @@
         } else setErr('message', '');
 
         return { ok };
-      };
+      }
 
-      form.addEventListener('submit', async (e) => {
+      form.addEventListener('submit', function (e) {
         e.preventDefault();
         clearAll();
 
         const v = validate();
-        if (!v.ok) return;
-        if (v.bot) return;
+        if (!v.ok || v.bot) return;
 
-        submitBtn.disabled = true;
+        if (submitBtn) submitBtn.disabled = true;
         if (statusEl) statusEl.textContent = 'Senden…';
 
         const payload = {
-          name: escapeHtml(form.name.value.trim()),
-          childName: escapeHtml(form.childName.value.trim()),
-          email: escapeHtml(form.email.value.trim()),
-          phone: escapeHtml(form.phone.value.trim()),
-          message: escapeHtml(form.message.value.trim()),
-          privacy: form.privacy.checked,
+          name: escapeHtml((form.name.value || '').trim()),
+          childName: escapeHtml((form.childName.value || '').trim()),
+          email: escapeHtml((form.email.value || '').trim()),
+          phone: escapeHtml((form.phone.value || '').trim()),
+          message: escapeHtml((form.message.value || '').trim()),
+          privacy: !!form.privacy.checked,
           page: location.href,
         };
 
-        try {
-          const res = await fetch(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-          });
-
-          const data = await res.json().catch(() => ({}));
-          if (!res.ok) {
-            if (statusEl) {
-              statusEl.textContent =
-                data?.error ||
-                'Fehler beim Senden. Bitte versuchen Sie es erneut.';
+        fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+          .then(function (res) {
+            return res
+              .json()
+              .catch(function () {
+                return {};
+              })
+              .then(function (data) {
+                return { res: res, data: data };
+              });
+          })
+          .then(function (x) {
+            if (!x.res.ok) {
+              if (statusEl)
+                statusEl.textContent =
+                  x.data.error ||
+                  'Fehler beim Senden. Bitte versuchen Sie es erneut.';
+              if (submitBtn) submitBtn.disabled = false;
+              return;
             }
-            submitBtn.disabled = false;
-            return;
-          }
 
-          if (statusEl)
-            statusEl.textContent = 'Danke! Ihre Nachricht wurde gesendet.';
-          form.reset();
-          submitBtn.disabled = false;
-        } catch (err) {
-          if (statusEl) {
-            statusEl.textContent =
-              'Netzwerkfehler. Bitte später erneut versuchen.';
-          }
-          submitBtn.disabled = false;
-        }
+            if (statusEl)
+              statusEl.textContent = 'Danke! Ihre Nachricht wurde gesendet.';
+            form.reset();
+            if (submitBtn) submitBtn.disabled = false;
+          })
+          .catch(function () {
+            if (statusEl)
+              statusEl.textContent =
+                'Netzwerkfehler. Bitte später erneut versuchen.';
+            if (submitBtn) submitBtn.disabled = false;
+          });
       });
 
-      if (!localStorage.getItem('clavisContactDismissed')) {
-        setTimeout(() => {
-          if (overlay.classList.contains('clavis-hidden')) {
-            openModal();
-          }
-        }, 20000);
-      }
+      // Ensure closed state on load (so page scroll NEVER breaks)
+      overlay.classList.remove('is-open');
+      overlay.setAttribute('aria-hidden', 'true');
     }
 
-    waitForElements();
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
   })();
 </script>

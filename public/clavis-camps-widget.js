@@ -507,10 +507,23 @@
       }
     }
 
+    function ensureModalInBody() {
+      if (modal && modal.parentElement !== document.body) {
+        document.body.appendChild(modal);
+      }
+    }
+
+    function lockBodyScroll(lock) {
+      document.body.classList.toggle('clavis-modal-lock', !!lock);
+    }
+
     function openModal(courseKey) {
       var course = courseIndex[courseKey];
       if (!course) return;
       currentCourseKey = courseKey;
+
+      ensureModalInBody();
+      lockBodyScroll(true);
 
       modalTitle.textContent = course.title || 'Camp';
 
@@ -524,7 +537,6 @@
         if (v.periodLabel) parts.push(v.periodLabel);
         if (v.timeLabel) parts.push(v.timeLabel);
 
-        // места
         var seatsText = '';
         if (typeof v.freeSeats === 'number') {
           seatsText =
@@ -541,23 +553,24 @@
         if (typeof v.freeSeats === 'number' && v.freeSeats <= 0)
           opt.disabled = true;
 
-        modalSelect.addEventListener('change', updateModalNote);
         modalSelect.appendChild(opt);
       }
+
+      modalSelect.onchange = updateModalNote;
 
       modalFirstName.value = '';
       modalLastName.value = '';
       modalDob.value = '';
 
-      modalNote.textContent = variants.length
-        ? 'Bitte wählen Sie den Termin und geben Sie den Namen des Kindes ein.'
-        : '';
+      modalNote.textContent =
+        'Bitte wählen Sie den Termin und geben Sie den Namen des Kindes ein.';
 
       modal.classList.add('open');
     }
 
     function closeModal() {
       modal.classList.remove('open');
+      lockBodyScroll(false);
       currentCourseKey = null;
     }
 

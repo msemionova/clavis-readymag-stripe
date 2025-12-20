@@ -562,3 +562,73 @@
     margin-bottom: 10px;
   }
 }
+
+/* ===========================
+   CAMP MODAL — HARD FIX
+   =========================== */
+
+.rm-modal {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483647 !important;
+
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  padding: 16px;
+  box-sizing: border-box;
+
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+
+  transform: translateZ(0);
+}
+
+.rm-modal.open {
+  display: flex;
+}
+
+.rm-modal__backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.rm-modal__dialog {
+  position: relative !important;
+  z-index: 1;
+
+  width: min(520px, 100%);
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+
+  background: #fff;
+  box-sizing: border-box;
+
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+  .rm-modal {
+    padding: 12px;
+    align-items: flex-start;
+  }
+
+  .rm-modal__dialog {
+    max-height: calc(100dvh - 24px);
+    padding: 18px;
+  }
+
+  .rm-modal__close {
+    top: 14px;
+    right: 14px;
+  }
+}
+
+/* блокируем скролл страницы, когда модаль открыта */
+body.clavis-modal-lock {
+  overflow: hidden !important;
+  touch-action: none;
+}

@@ -4,10 +4,69 @@
     var FULL_DAY_DISCOUNT_EUR = cfg.fullDayDiscount || 100;
     var API_BASE = cfg.apiBase || 'https://clavis-readymag-stripe.vercel.app';
 
-    var drawer = document.getElementById('cartDrawer');
-
     if (window.CartStore) return;
 
+    // WARENKORB DOM
+    var drawer = document.getElementById('cartDrawer');
+    var cartList = document.getElementById('cartList');
+    var totalEUR = document.getElementById('totalEUR');
+    var parentEmail = document.getElementById('parentEmail');
+    var payBtn = document.getElementById('payBtn');
+    var cartCountEl = document.getElementById('cartCount');
+    var fab = document.getElementById('cartFab');
+    var closeBtn = document.getElementById('closeDrawer');
+
+    if (
+      !drawer ||
+      !cartList ||
+      !totalEUR ||
+      !parentEmail ||
+      !payBtn ||
+      !cartCountEl ||
+      !fab ||
+      !closeBtn
+    ) {
+      console.warn('Warenkorb-Widget: Einige Elemente fehlen');
+      return;
+    }
+
+    // ===== Helper: move elements to BODY to avoid Readymag fixed+transform bugs
+    function moveToBody(el) {
+      if (el && el.parentElement !== document.body) {
+        document.body.appendChild(el);
+      }
+    }
+    moveToBody(fab);
+    moveToBody(drawer);
+
+    // ===== Overlay for drawer
+    var overlay = document.getElementById('cartDrawerOverlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'cartDrawerOverlay';
+      overlay.className = 'rm-drawer-overlay';
+      document.body.appendChild(overlay);
+    }
+
+    function lockBody(lock) {
+      document.body.classList.toggle('clavis-drawer-lock', !!lock);
+    }
+
+    function openDrawer() {
+      moveToBody(fab);
+      moveToBody(drawer);
+      drawer.classList.add('open');
+      overlay.classList.add('open');
+      lockBody(true);
+    }
+
+    function closeDrawer() {
+      drawer.classList.remove('open');
+      overlay.classList.remove('open');
+      lockBody(false);
+    }
+
+    // ===== Store + bus
     var Bus = new EventTarget();
 
     var Store = {
@@ -72,42 +131,17 @@
     window.CartStore = Store;
     window.CartBus = Bus;
 
-    // CLEANUP
+    // CLEANUP paid=1
     try {
       var params = new URLSearchParams(window.location.search);
       if (params.get('paid') === '1' && window.CartStore) {
         window.CartStore.clear();
-
-        // убираем ?paid=1 из URL, чтобы при обновлении не чистить снова
         params.delete('paid');
         var rest = params.toString();
         var newUrl = window.location.pathname + (rest ? '?' + rest : '');
         window.history.replaceState({}, '', newUrl);
       }
     } catch (e) {}
-
-    // WARENKORB DOM
-    var cartList = document.getElementById('cartList');
-    var totalEUR = document.getElementById('totalEUR');
-    var parentEmail = document.getElementById('parentEmail');
-    var payBtn = document.getElementById('payBtn');
-    var cartCountEl = document.getElementById('cartCount');
-    var fab = document.getElementById('cartFab');
-    var closeBtn = document.getElementById('closeDrawer');
-
-    if (
-      !drawer ||
-      !cartList ||
-      !totalEUR ||
-      !parentEmail ||
-      !payBtn ||
-      !cartCountEl ||
-      !fab ||
-      !closeBtn
-    ) {
-      console.warn('Warenkorb-Widget: Einige Elemente fehlen');
-      return;
-    }
 
     function formatEUR(cents) {
       return '€' + (cents / 100).toFixed(2);
@@ -118,8 +152,12 @@
     }
 
     function getPeriodLabel(it) {
-      // поддерживаем оба варианта ключей
       return String(it.periodLabel || it.period_label || '').trim();
+    }
+
+    function getSlot(it) {
+      // slot может жить в it.slot, а может только в metadata (если где-то забыли положить)
+      return String(it.slot || it.slot_key || it.slotKey || '').toLowerCase();
     }
 
     function escapeHtml(str) {
@@ -131,20 +169,39 @@
         .replace(/'/g, '&#039;');
     }
 
-    fab.addEventListener('click', function () {
-      drawer.classList.add('open');
+    // ===== Open/close handlers
+    fab.addEventListener('click', function (e) {
+      e.preventDefault();
+      openDrawer();
     });
 
-    closeBtn.addEventListener('click', function () {
-      drawer.classList.remove('open');
+    closeBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      closeDrawer();
+    });
+
+    overlay.addEventListener('click', function () {
+      closeDrawer();
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && drawer.classList.contains('open')) {
+        closeDrawer();
+      }
     });
 
     window.CartBus.addEventListener('cart:open', function () {
-      drawer.classList.add('open');
+      openDrawer();
     });
 
+    // ===== Render
     window.CartStore.subscribe(function (state) {
       cartCountEl.textContent = String(state.items.length);
+
+      // email restore
+      if (state.email && parentEmail && parentEmail.value !== state.email) {
+        parentEmail.value = state.email;
+      }
 
       if (!state.items.length) {
         cartList.innerHTML =
@@ -166,38 +223,42 @@
           });
         }
         byChild.get(key).items.push({
-          slot: String(it.slot || '').toLowerCase(),
+          slot: getSlot(it),
           idx: idx,
         });
       });
 
       var childKeys = Array.from(byChild.keys());
-      var siblingKeys = new Set(childKeys.slice(1)); // все, кроме первого ребёнка
+      var siblingKeys = new Set(childKeys.slice(1));
       var totalChildren = byChild.size;
 
-      // --- FULL DAY discount map: idx -> discountCents ---
+      // --- FULL DAY discount: индекс afternoon -> скидка ---
+      // ВАЖНО: ключ дня делаем period_label + productId (чтобы одинаковые period у разных продуктов не конфликтовали)
       var fullDayDiscountPerIndex = new Map();
 
       if (totalChildren === 1) {
-        var dayMap = new Map(); // periodLabel -> { morningIdx, afternoonIdx }
+        var dayMap = new Map(); // dayKey -> { morningIdx, afternoonIdx }
 
-        // 1) заполняем dayMap
         state.items.forEach(function (it, idx) {
-          var slot = String(it.slot || '').toLowerCase();
+          var slot = getSlot(it);
           if (slot !== 'morning' && slot !== 'afternoon') return;
 
           var periodLabel = getPeriodLabel(it).toLowerCase();
+          var productId = String(
+            it.productId || it.product_id || ''
+          ).toLowerCase();
           if (!periodLabel) return;
 
-          var info = dayMap.get(periodLabel) || {};
+          var dayKey = productId + '__' + periodLabel;
+
+          var info = dayMap.get(dayKey) || {};
           if (slot === 'morning' && info.morningIdx == null)
             info.morningIdx = idx;
           if (slot === 'afternoon' && info.afternoonIdx == null)
             info.afternoonIdx = idx;
-          dayMap.set(periodLabel, info);
+          dayMap.set(dayKey, info);
         });
 
-        // 2) считаем скидку на afternoon
         dayMap.forEach(function (info) {
           if (info.morningIdx != null && info.afternoonIdx != null) {
             var discountCents = Math.round(FULL_DAY_DISCOUNT_EUR * 100);
@@ -215,22 +276,22 @@
           var hasSiblingInCart = totalChildren >= 2;
           var applySiblingDiscount = hasSiblingInCart && isSibling;
 
-          // IMPORTANT: amount в корзине должен быть "full" (базовая цена)
+          // amount в корзине должен быть БАЗОВОЙ (full) суммой
           var amount = Number(it.amount || 0);
 
-          // 1) sibling discount: −10%
+          // 1) sibling discount
           var hasSiblingDiscount = false;
           if (applySiblingDiscount) {
             amount = Math.round(amount * 0.9);
             hasSiblingDiscount = true;
           }
 
-          // 2) full-day discount: −100€ на afternoon айтем
+          // 2) full-day discount (только один ребёнок)
           var hasFullDayDiscount = false;
           if (totalChildren === 1 && fullDayDiscountPerIndex.has(i)) {
-            var discountCents = fullDayDiscountPerIndex.get(i) || 0;
-            amount = Math.max(0, amount - discountCents);
-            hasFullDayDiscount = discountCents > 0;
+            var dc = fullDayDiscountPerIndex.get(i) || 0;
+            amount = Math.max(0, amount - dc);
+            hasFullDayDiscount = dc > 0;
           }
 
           sum += amount;
@@ -240,14 +301,13 @@
           if (hasFullDayDiscount)
             labels.push('−' + FULL_DAY_DISCOUNT_EUR + ' € Ganztagsrabatt');
 
-          // label/title: поддержим разные поля, чтобы не падало
           var baseLabel = it.label || it.title || 'Camp';
           var labelHtml = escapeHtml(baseLabel);
 
           if (labels.length) {
             labelHtml +=
-              ' <span style="color:#16a34a; font-weight:500">' +
-              labels.join(', ') +
+              ' <span class="rm-discount-label">' +
+              escapeHtml(labels.join(', ')) +
               '</span>';
           }
 
@@ -282,13 +342,22 @@
       totalEUR.textContent = formatEUR(sum);
 
       cartList.querySelectorAll('[data-remove]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
+        btn.addEventListener('click', function (e) {
+          e.preventDefault();
           var idx = +btn.getAttribute('data-remove');
           window.CartStore.remove(idx);
         });
       });
     });
 
+    // save email live
+    parentEmail.addEventListener('input', function () {
+      try {
+        window.CartStore.setEmail((parentEmail.value || '').trim());
+      } catch (e) {}
+    });
+
+    // PAY
     payBtn.addEventListener('click', function () {
       var state = window.CartStore;
       if (!state.items.length) {
@@ -343,17 +412,19 @@
           console.error(err);
           alert('Die Zahlung konnte nicht erstellt werden.');
           payBtn.disabled = false;
-          payBtn.textContent = 'Zur Zahlung weitergehen';
+          payBtn.textContent = 'Zur Zahlung fortfahren';
         });
     });
 
-    // close drawer when clicking outside
+    // IMPORTANT: убираем outside-click close (у нас теперь overlay)
+    // но оставим safety: если overlay по какой-то причине не вставился
     document.addEventListener('click', function (e) {
       if (!drawer.classList.contains('open')) return;
       if (drawer.contains(e.target)) return;
       if (e.target.closest('#cartFab')) return;
       if (e.target.closest('[data-remove]')) return;
-      drawer.classList.remove('open');
+      if (overlay && overlay.classList.contains('open')) return; // overlay сам закроет
+      closeDrawer();
     });
 
     drawer.classList.remove('rm-drawer--hidden');
