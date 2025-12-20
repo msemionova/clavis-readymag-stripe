@@ -32,13 +32,13 @@ export default async function handler(req, res) {
         childFirst: string;
         childLast: string;
         basePriceEUR?: number;
-        prices: { fullPriceId: string; discPriceId: string };
+        prices: { fullPriceId: string; discPriceId?: string | null };
         productId?: string;
         title?: string;
         periodLabel?: string;
         timeLabel?: string;
         disciplineKey?: string;
-        childDob?: string;
+        childDob: string;
       }>;
     };
 
@@ -59,7 +59,7 @@ export default async function handler(req, res) {
     });
 
     // Кеш цен (с metadata)
-    const cache = new Map<
+    const priceCache = new Map<
       string,
       { amount: number; currency: string; metadata: Record<string, any> }
     >();
@@ -70,7 +70,7 @@ export default async function handler(req, res) {
         if (!pr.unit_amount || !pr.currency) {
           throw new Error(`Price ${id} missing unit_amount/currency`);
         }
-        cache.set(id, {
+        priceCache.set(id, {
           amount: pr.unit_amount,
           currency: pr.currency,
           metadata: (pr.metadata || {}) as Record<string, any>,
@@ -94,7 +94,7 @@ export default async function handler(req, res) {
       const key = `${productId}__${slot}`;
       const fullId = it.prices.fullPriceId;
 
-      const entry = cache.get(fullId);
+      const entry = priceCache.get(fullId);
       const meta = (entry?.metadata || {}) as any;
 
       const maxSeats = Number(meta.max_seats || 0);
@@ -115,7 +115,7 @@ export default async function handler(req, res) {
     });
 
     // Проверяем каждый слот целиком (full + discount вместе)
-    for (const [key, cap] of caps.entries()) {
+    for (const [, cap] of caps.entries()) {
       if (!cap.maxSeats) continue; // 0 → без ограничения
       const free = cap.maxSeats - cap.bookedSeats;
       if (cap.demand > free) {
@@ -136,6 +136,7 @@ export default async function handler(req, res) {
     type ChildValue = {
       first: string;
       last: string;
+      dob: string;
       items: Array<{
         slot: string;
         periodLabel?: string;
@@ -152,6 +153,7 @@ export default async function handler(req, res) {
         byChild.set(key, {
           first: it.childFirst,
           last: it.childLast,
+          dob: it.childDob,
           items: [],
         });
       }
@@ -164,11 +166,32 @@ export default async function handler(req, res) {
     }
 
     const childKeys = Array.from(byChild.keys());
-    // const primaryChildKey = childKeys[0] || null; // если понадобится отличать "основного"
     const siblingKeys = new Set(childKeys.slice(1)); // все, кроме первого — сиблинги
     const totalChildren = byChild.size;
 
-    // === ПОЛНЫЙ ДЕНЬ: минус X евро, если один ребёнок ===
+    // ========= FULL DAY: берём "канонический" period_label из product.metadata =========
+    const productMetaCache = new Map<string, Record<string, any>>();
+
+    async function getProductMeta(productId?: string) {
+      if (!productId) return null;
+      if (productMetaCache.has(productId))
+        return productMetaCache.get(productId)!;
+
+      const p = await stripe.products.retrieve(productId);
+      const meta = (p.metadata || {}) as Record<string, any>;
+      productMetaCache.set(productId, meta);
+      return meta;
+    }
+
+    async function getCanonicalPeriodLabel(it: any) {
+      // фронтовое поле (если вдруг есть)
+      const fromClient = String(it.periodLabel || it.period_label || '').trim();
+      if (fromClient) return fromClient;
+
+      // истина: Stripe product.metadata.period_label
+      const meta = await getProductMeta(it.productId);
+      return String(meta?.period_label || '').trim();
+    }
 
     // индекс -> размер скидки в центах
     const fullDayDiscountPerIndex = new Map<number, number>();
@@ -177,28 +200,66 @@ export default async function handler(req, res) {
       type DaySlotInfo = { morningIdx?: number; afternoonIdx?: number };
       const dayMap = new Map<string, DaySlotInfo>();
 
-      // Для каждого дня, где есть и утро, и вторая половина, даём скидку на вторую половину дня
-      for (const [, info] of dayMap.entries()) {
+      // собираем пары morning+afternoon по period_label (и только по нему)
+      for (let idx = 0; idx < items.length; idx++) {
+        const it = items[idx];
+        const slot = (it.slot || '').toLowerCase();
+        if (slot !== 'morning' && slot !== 'afternoon') continue;
+
+        const periodLabel = (await getCanonicalPeriodLabel(it)).toLowerCase();
+        if (!periodLabel) {
+          console.warn('[full-day] missing period_label', {
+            idx,
+            productId: it.productId,
+            slot: it.slot,
+            periodLabelClient: it.periodLabel,
+          });
+          continue;
+        }
+
+        const dayKey = periodLabel;
+
+        const info = dayMap.get(dayKey) || {};
+        if (slot === 'morning') info.morningIdx ??= idx;
+        if (slot === 'afternoon') info.afternoonIdx ??= idx;
+        dayMap.set(dayKey, info);
+      }
+
+      // скидку применяем к "afternoon", когда есть и morning и afternoon
+      for (const [dayKey, info] of dayMap.entries()) {
         if (info.morningIdx != null && info.afternoonIdx != null) {
           const afternoonItem = items[info.afternoonIdx];
 
-          const fullEntry = cache.get(afternoonItem.prices.fullPriceId);
+          const fullEntry = priceCache.get(afternoonItem.prices.fullPriceId);
           const meta = (fullEntry?.metadata || {}) as any;
 
-          // клиенты могут менять это число в Stripe (metadata.full_day_discount_eur)
-          const fullDayDiscountEur = Number(
-            meta.full_day_discount_eur || '100'
-          );
+          const fullDayDiscountEur = Number(meta.full_day_discount_eur || '0');
           const discountCents = Math.round(fullDayDiscountEur * 100);
 
           if (discountCents > 0) {
             fullDayDiscountPerIndex.set(info.afternoonIdx, discountCents);
+            console.log('[full-day] applied', {
+              dayKey,
+              idx: info.afternoonIdx,
+              discountCents,
+            });
+          } else {
+            console.warn('[full-day] full_day_discount_eur missing/0', {
+              dayKey,
+              meta,
+            });
           }
         }
       }
+
+      console.log('[discount-debug] dayMap=', Array.from(dayMap.entries()));
+      console.log(
+        '[discount-debug] fullDayDiscountPerIndex=',
+        Array.from(fullDayDiscountPerIndex.entries())
+      );
     }
 
-    // ========= Остальная логика (line_items, summary) =========
+    // ========= Остальная логика (валидации, line_items, summary) =========
 
     const nameRe = /^[A-Za-zÀ-ÖØ-öø-ÿ\s'-]{1,60}$/;
 
@@ -239,25 +300,22 @@ export default async function handler(req, res) {
       const hasSiblingInCart = totalChildren >= 2;
       const applySiblingDiscount = hasSiblingInCart && isSibling;
 
-      const fullEntry = cache.get(it.prices.fullPriceId);
+      const fullEntry = priceCache.get(it.prices.fullPriceId);
       if (!fullEntry) {
         throw new Error(`Price not in cache: ${it.prices.fullPriceId}`);
       }
 
       const discEntry = it.prices.discPriceId
-        ? cache.get(it.prices.discPriceId)
+        ? priceCache.get(it.prices.discPriceId)
         : undefined;
 
       let amount = fullEntry.amount;
       const currency = fullEntry.currency;
 
-      // 1) скидка сиблингу: берём discPrice, если есть, иначе 0.9 от полной
+      // 1) скидка сиблингу: берём disc10 цену, если есть, иначе 0.9 от полной
       if (applySiblingDiscount) {
-        if (discEntry) {
-          amount = discEntry.amount;
-        } else {
-          amount = Math.round(fullEntry.amount * 0.9);
-        }
+        if (discEntry) amount = discEntry.amount;
+        else amount = Math.round(fullEntry.amount * 0.9);
       }
 
       // 2) скидка за полный день (только когда один ребёнок)
@@ -269,13 +327,10 @@ export default async function handler(req, res) {
         amount = Math.max(0, amount - discountCents);
       }
 
-      // какой прайс считаем "базовым" для метадаты и вебхуков
-      const chosenBasePriceId =
-        applySiblingDiscount && it.prices.discPriceId
-          ? it.prices.discPriceId
-          : it.prices.fullPriceId;
+      // Источник истины для вебхуков/лимитов: всегда fullPriceId
+      const chosenBasePriceId = it.prices.fullPriceId;
 
-      const courseTitle = it.title;
+      const courseTitle = it.title || 'Camp';
 
       const labels: string[] = [];
       if (applySiblingDiscount) labels.push('Geschwisterrabatt −10%');
@@ -292,20 +347,19 @@ export default async function handler(req, res) {
         );
       }
 
-      const periodLabel =
-        (it as any).periodLabel || (it as any).period_label || '';
+      const periodLabel = String(
+        it.periodLabel || (it as any).period_label || ''
+      ).trim();
+      const disciplineKey = String(
+        it.disciplineKey || (it as any).discipline_key || ''
+      ).trim();
 
-      const disciplineKey =
-        (it as any).disciplineKey || (it as any).discipline_key || '';
+      if (periodLabel) descParts.push(periodLabel);
 
-      if (periodLabel) {
-        descParts.push(periodLabel);
-      }
-      const timeLabel = (it as any).timeLabel || (it as any).time_label || '';
-
-      if (timeLabel) {
-        descParts.push(timeLabel);
-      }
+      const timeLabel = String(
+        it.timeLabel || (it as any).time_label || ''
+      ).trim();
+      if (timeLabel) descParts.push(timeLabel);
 
       const description = descParts.join(' • ');
 
@@ -322,12 +376,15 @@ export default async function handler(req, res) {
               childFirst: it.childFirst,
               childLast: it.childLast,
               original_price_id: chosenBasePriceId,
+
               title: it.title || '',
               period_label: periodLabel,
               time_label: timeLabel,
               discipline_key: disciplineKey,
+
               product_id: (it as any).productId || '',
               child_dob: (it as any).childDob || '',
+
               discount_type: applySiblingDiscount
                 ? 'sibling_10'
                 : hasFullDayDiscountHere
@@ -344,12 +401,12 @@ export default async function handler(req, res) {
         const parts = ch.items.map((x) => {
           return `${x.disciplineKey} · ${x.periodLabel} · ${x.timeLabel}`;
         });
-        return `${ch.first} ${ch.last}: ${parts.join(', ')}`;
+        return `${ch.first} ${ch.last} (${ch.dob}): ${parts.join(', ')}`;
       })
       .join('; ');
 
     const childrenNames = Array.from(byChild.values())
-      .map((ch) => `${ch.first} ${ch.last}`)
+      .map((ch) => `${ch.first} ${ch.last} (${ch.dob})`)
       .join(', ');
 
     const successUrl = `${process.env.SUCCESS_URL}?paid=1&session_id={CHECKOUT_SESSION_ID}`;

@@ -86,13 +86,14 @@
       }
     } catch (e) {}
 
-    //WARENKORB
+    // WARENKORB DOM
     var cartList = document.getElementById('cartList');
     var totalEUR = document.getElementById('totalEUR');
     var parentEmail = document.getElementById('parentEmail');
     var payBtn = document.getElementById('payBtn');
     var cartCountEl = document.getElementById('cartCount');
     var fab = document.getElementById('cartFab');
+    var closeBtn = document.getElementById('closeDrawer');
 
     if (
       !drawer ||
@@ -101,7 +102,8 @@
       !parentEmail ||
       !payBtn ||
       !cartCountEl ||
-      !fab
+      !fab ||
+      !closeBtn
     ) {
       console.warn('Warenkorb-Widget: Einige Elemente fehlen');
       return;
@@ -113,6 +115,11 @@
 
     function norm(s) {
       return (s || '').trim().replace(/\s+/g, ' ').toLowerCase();
+    }
+
+    function getPeriodLabel(it) {
+      // поддерживаем оба варианта ключей
+      return String(it.periodLabel || it.period_label || '').trim();
     }
 
     function escapeHtml(str) {
@@ -127,11 +134,10 @@
     fab.addEventListener('click', function () {
       drawer.classList.add('open');
     });
-    document
-      .getElementById('closeDrawer')
-      .addEventListener('click', function () {
-        drawer.classList.remove('open');
-      });
+
+    closeBtn.addEventListener('click', function () {
+      drawer.classList.remove('open');
+    });
 
     window.CartBus.addEventListener('cart:open', function () {
       drawer.classList.add('open');
@@ -147,7 +153,7 @@
         return;
       }
 
-      // группируем по детям
+      // --- группируем по детям ---
       var byChild = new Map();
 
       state.items.forEach(function (it, idx) {
@@ -160,20 +166,38 @@
           });
         }
         byChild.get(key).items.push({
-          slot: it.slot,
-          idx: idx, // запоминаем индекс в корзине
+          slot: String(it.slot || '').toLowerCase(),
+          idx: idx,
         });
       });
 
       var childKeys = Array.from(byChild.keys());
-      var siblingKeys = new Set(childKeys.slice(1)); // все, кроме первого ребёнка, считаем сиблингами
+      var siblingKeys = new Set(childKeys.slice(1)); // все, кроме первого ребёнка
       var totalChildren = byChild.size;
 
-      var fullDayDiscountPerIndex = new Map(); // idx -> скидка в центах
+      // --- FULL DAY discount map: idx -> discountCents ---
+      var fullDayDiscountPerIndex = new Map();
 
       if (totalChildren === 1) {
-        var dayMap = new Map(); // dayKey -> { morningIdx, afternoonIdx }
+        var dayMap = new Map(); // periodLabel -> { morningIdx, afternoonIdx }
 
+        // 1) заполняем dayMap
+        state.items.forEach(function (it, idx) {
+          var slot = String(it.slot || '').toLowerCase();
+          if (slot !== 'morning' && slot !== 'afternoon') return;
+
+          var periodLabel = getPeriodLabel(it).toLowerCase();
+          if (!periodLabel) return;
+
+          var info = dayMap.get(periodLabel) || {};
+          if (slot === 'morning' && info.morningIdx == null)
+            info.morningIdx = idx;
+          if (slot === 'afternoon' && info.afternoonIdx == null)
+            info.afternoonIdx = idx;
+          dayMap.set(periodLabel, info);
+        });
+
+        // 2) считаем скидку на afternoon
         dayMap.forEach(function (info) {
           if (info.morningIdx != null && info.afternoonIdx != null) {
             var discountCents = Math.round(FULL_DAY_DISCOUNT_EUR * 100);
@@ -191,21 +215,22 @@
           var hasSiblingInCart = totalChildren >= 2;
           var applySiblingDiscount = hasSiblingInCart && isSibling;
 
-          var amount = it.amount || 0; // base price in cents
+          // IMPORTANT: amount в корзине должен быть "full" (базовая цена)
+          var amount = Number(it.amount || 0);
 
-          // 1) скидка сиблингу: −10%
+          // 1) sibling discount: −10%
           var hasSiblingDiscount = false;
           if (applySiblingDiscount) {
             amount = Math.round(amount * 0.9);
             hasSiblingDiscount = true;
           }
 
-          // 2) скидка за полный день (только один ребёнок)
+          // 2) full-day discount: −100€ на afternoon айтем
           var hasFullDayDiscount = false;
           if (totalChildren === 1 && fullDayDiscountPerIndex.has(i)) {
-            var discountCents = fullDayDiscountPerIndex.get(i);
+            var discountCents = fullDayDiscountPerIndex.get(i) || 0;
             amount = Math.max(0, amount - discountCents);
-            hasFullDayDiscount = true;
+            hasFullDayDiscount = discountCents > 0;
           }
 
           sum += amount;
@@ -213,9 +238,12 @@
           var labels = [];
           if (hasSiblingDiscount) labels.push('−10% Geschwisterrabatt');
           if (hasFullDayDiscount)
-            labels.push(`−${FULL_DAY_DISCOUNT_EUR} € Ganztagsrabatt`);
+            labels.push('−' + FULL_DAY_DISCOUNT_EUR + ' € Ganztagsrabatt');
 
-          var labelHtml = escapeHtml(it.label);
+          // label/title: поддержим разные поля, чтобы не падало
+          var baseLabel = it.label || it.title || 'Camp';
+          var labelHtml = escapeHtml(baseLabel);
+
           if (labels.length) {
             labelHtml +=
               ' <span style="color:#16a34a; font-weight:500">' +
@@ -267,6 +295,7 @@
         alert('Der Einkaufswagen ist leer');
         return;
       }
+
       var email = (parentEmail.value || '').trim();
       if (!email) {
         alert('Geben Sie Ihre E-Mail-Adresse');
@@ -318,24 +347,15 @@
         });
     });
 
-    // === close drawer when clicking outside ===
+    // close drawer when clicking outside
     document.addEventListener('click', function (e) {
-      // если drawer не открыт — ничего не делаем
       if (!drawer.classList.contains('open')) return;
-
-      // если клик был внутри drawer → игнорируем
       if (drawer.contains(e.target)) return;
-
-      // если клик был по кнопке открытия → игнорируем
       if (e.target.closest('#cartFab')) return;
-
-      if (e.target.closest('[data-remove]')) {
-        return;
-      }
-
-      // закрываем
+      if (e.target.closest('[data-remove]')) return;
       drawer.classList.remove('open');
     });
+
     drawer.classList.remove('rm-drawer--hidden');
   }
 
