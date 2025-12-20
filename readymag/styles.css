@@ -18,6 +18,24 @@
   letter-spacing: -0.3px;
 }
 
+html,
+body {
+  overflow-x: hidden;
+}
+
+/* iOS anti-zoom: font-size >= 16px */
+.rm-input,
+.rm-select,
+textarea,
+input[type='text'],
+input[type='email'],
+input[type='tel'],
+input[type='date'],
+select {
+  font-size: 16px !important;
+  line-height: 1.2;
+}
+
 .season-bg,
 [data-id='693c29f5e2724635d9eeca58'] {
   background-color: var(--rm-season-bg) !important;

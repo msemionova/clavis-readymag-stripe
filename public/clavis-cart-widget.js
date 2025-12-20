@@ -4,402 +4,326 @@
     var FULL_DAY_DISCOUNT_EUR = cfg.fullDayDiscount || 100;
     var API_BASE = cfg.apiBase || 'https://clavis-readymag-stripe.vercel.app';
 
-    // если Store уже живёт — просто принудительно перерисуем в ВИДИМЫЙ DOM
-    if (window.CartStore && window.__ClavisCartRebind) {
-      window.__ClavisCartRebind();
-      return;
-    }
-    if (window.CartStore) return;
+    function waitForElements() {
+      var drawer = document.getElementById('cartDrawer');
+      var fab = document.getElementById('cartFab');
+      var closeBtn = document.getElementById('closeDrawer');
+      var cartList = document.getElementById('cartList');
+      var totalEUR = document.getElementById('totalEUR');
+      var parentEmail = document.getElementById('parentEmail');
+      var payBtn = document.getElementById('payBtn');
+      var cartCountEl = document.getElementById('cartCount');
 
-    var Bus = new EventTarget();
-
-    var Store = {
-      items: [],
-      email: '',
-      listeners: [],
-      subscribe: function (fn) {
-        this.listeners.push(fn);
-        fn(this);
-      },
-      notify: function () {
-        var self = this;
-        this.listeners.forEach(function (fn) {
-          fn(self);
-        });
-      },
-      add: function (item) {
-        this.items.push(item);
-        this.persist();
-        this.notify();
-      },
-      remove: function (index) {
-        this.items.splice(index, 1);
-        this.persist();
-        this.notify();
-      },
-      clear: function () {
-        this.items = [];
-        this.persist();
-        this.notify();
-      },
-      setEmail: function (v) {
-        this.email = v;
-        this.persist();
-      },
-      totalCents: function () {
-        return this.items.reduce(function (sum, it) {
-          return sum + (it.amount || 0);
-        }, 0);
-      },
-      persist: function () {
-        try {
-          localStorage.setItem(
-            'camp_cart_v1',
-            JSON.stringify({ items: this.items, email: this.email })
-          );
-        } catch (e) {}
-      },
-    };
-
-    try {
-      var saved = JSON.parse(localStorage.getItem('camp_cart_v1') || 'null');
-      if (saved && Array.isArray(saved.items)) {
-        Store.items = saved.items;
-        Store.email = saved.email || '';
-      }
-    } catch (e) {}
-
-    window.CartStore = Store;
-    window.CartBus = Bus;
-
-    // CLEANUP after ?paid=1
-    try {
-      var params = new URLSearchParams(window.location.search);
-      if (params.get('paid') === '1' && window.CartStore) {
-        window.CartStore.clear();
-        params.delete('paid');
-        var rest = params.toString();
-        var newUrl = window.location.pathname + (rest ? '?' + rest : '');
-        window.history.replaceState({}, '', newUrl);
-      }
-    } catch (e) {}
-
-    // ---------------------------
-    // Helpers: pick visible DOM node among duplicates (because RM responsive duplicates)
-    // ---------------------------
-    function isVisibleEl(el) {
-      if (!el) return false;
-      // hidden by display:none or not in layout
-      var rects = el.getClientRects();
-      if (!rects || !rects.length) return false;
-
-      var cs = window.getComputedStyle(el);
+      // ждём пока RM реально отрендерит DOM
       if (
-        !cs ||
-        cs.display === 'none' ||
-        cs.visibility === 'hidden' ||
-        cs.opacity === '0'
-      )
-        return false;
-
-      // if inside hidden parent, rects can still be 0; above already checked
-      return true;
-    }
-
-    function pickVisibleById(id) {
-      var nodes = document.querySelectorAll('#' + CSS.escape(id));
-      if (!nodes || !nodes.length) return null;
-      for (var i = 0; i < nodes.length; i++) {
-        if (isVisibleEl(nodes[i])) return nodes[i];
+        !drawer ||
+        !fab ||
+        !closeBtn ||
+        !cartList ||
+        !totalEUR ||
+        !parentEmail ||
+        !payBtn ||
+        !cartCountEl
+      ) {
+        setTimeout(waitForElements, 80);
+        return;
       }
-      // fallback: first
-      return nodes[0];
+
+      // 🔥 КРИТИЧНО: вынести в body (вне RM transform/scale контейнеров)
+      try {
+        if (drawer.parentElement !== document.body)
+          document.body.appendChild(drawer);
+        if (fab.parentElement !== document.body) document.body.appendChild(fab);
+      } catch (e) {}
+
+      // если уже инициализировали — просто выходим (НО после переноса!)
+      if (window.CartStore) return;
+
+      setup(
+        drawer,
+        fab,
+        closeBtn,
+        cartList,
+        totalEUR,
+        parentEmail,
+        payBtn,
+        cartCountEl
+      );
     }
 
-    // if you have multiple blocks, IDs repeat — we always resolve on-demand
-    function resolveDom() {
-      return {
-        drawer: pickVisibleById('cartDrawer'),
-        cartList: pickVisibleById('cartList'),
-        totalEUR: pickVisibleById('totalEUR'),
-        parentEmail: pickVisibleById('parentEmail'),
-        payBtn: pickVisibleById('payBtn'),
-        cartCountEl: pickVisibleById('cartCount'),
-        fab: pickVisibleById('cartFab'),
-        closeBtn: pickVisibleById('closeDrawer'),
+    function setup(
+      drawer,
+      fab,
+      closeBtn,
+      cartList,
+      totalEUR,
+      parentEmail,
+      payBtn,
+      cartCountEl
+    ) {
+      var Bus = new EventTarget();
+
+      var Store = {
+        items: [],
+        email: '',
+        listeners: [],
+        subscribe: function (fn) {
+          this.listeners.push(fn);
+          fn(this);
+        },
+        notify: function () {
+          var self = this;
+          this.listeners.forEach(function (fn) {
+            fn(self);
+          });
+        },
+        add: function (item) {
+          this.items.push(item);
+          this.persist();
+          this.notify();
+        },
+        remove: function (index) {
+          this.items.splice(index, 1);
+          this.persist();
+          this.notify();
+        },
+        clear: function () {
+          this.items = [];
+          this.persist();
+          this.notify();
+        },
+        setEmail: function (v) {
+          this.email = v;
+          this.persist();
+        },
+        persist: function () {
+          try {
+            localStorage.setItem(
+              'camp_cart_v1',
+              JSON.stringify({ items: this.items, email: this.email })
+            );
+          } catch (e) {}
+        },
       };
-    }
 
-    function formatEUR(cents) {
-      return '€' + (cents / 100).toFixed(2);
-    }
+      try {
+        var saved = JSON.parse(localStorage.getItem('camp_cart_v1') || 'null');
+        if (saved && Array.isArray(saved.items)) {
+          Store.items = saved.items;
+          Store.email = saved.email || '';
+        }
+      } catch (e) {}
 
-    function norm(s) {
-      return (s || '').trim().replace(/\s+/g, ' ').toLowerCase();
-    }
+      window.CartStore = Store;
+      window.CartBus = Bus;
 
-    function getPeriodLabel(it) {
-      return String(it.periodLabel || it.period_label || '').trim();
-    }
-
-    function escapeHtml(str) {
-      return String(str || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
-
-    // ---------------------------
-    // Render (always into visible elements)
-    // ---------------------------
-    var lastBound = null;
-
-    function render(state) {
-      var dom = resolveDom();
-      if (!dom.drawer || !dom.cartList || !dom.totalEUR || !dom.cartCountEl)
-        return;
-
-      dom.cartCountEl.textContent = String(state.items.length);
-
-      if (!state.items.length) {
-        dom.cartList.innerHTML =
-          '<div class="rm-hint">Der Warenkorb ist leer</div>';
-        dom.totalEUR.textContent = '€0.00';
-        return;
+      // ---- helpers ----
+      function formatEUR(cents) {
+        return '€' + (cents / 100).toFixed(2);
+      }
+      function norm(s) {
+        return (s || '').trim().replace(/\s+/g, ' ').toLowerCase();
+      }
+      function getPeriodLabel(it) {
+        return String(it.periodLabel || it.period_label || '').trim();
+      }
+      function escapeHtml(str) {
+        return String(str || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
       }
 
-      // group by child
-      var byChild = new Map();
-      state.items.forEach(function (it, idx) {
-        var key = norm(it.childFirst) + '|' + norm(it.childLast);
-        if (!byChild.has(key)) {
-          byChild.set(key, {
-            first: it.childFirst,
-            last: it.childLast,
-            items: [],
+      // ---- open/close ----
+      function openDrawer() {
+        // на всякий случай повторно переносим в body при открытии
+        try {
+          if (drawer.parentElement !== document.body)
+            document.body.appendChild(drawer);
+          if (fab.parentElement !== document.body)
+            document.body.appendChild(fab);
+        } catch (e) {}
+
+        drawer.classList.add('open');
+        drawer.classList.remove('rm-drawer--hidden');
+      }
+
+      function closeDrawer() {
+        drawer.classList.remove('open');
+      }
+
+      fab.addEventListener('click', function (e) {
+        e.preventDefault();
+        openDrawer();
+      });
+      closeBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        closeDrawer();
+      });
+      window.CartBus.addEventListener('cart:open', openDrawer);
+
+      // close on outside click
+      document.addEventListener('click', function (e) {
+        if (!drawer.classList.contains('open')) return;
+        if (drawer.contains(e.target)) return;
+        if (e.target.closest('#cartFab')) return;
+        closeDrawer();
+      });
+
+      // ---- render (скидки тут как у тебя) ----
+      window.CartStore.subscribe(function (state) {
+        cartCountEl.textContent = String(state.items.length);
+
+        if (!state.items.length) {
+          cartList.innerHTML =
+            '<div class="rm-hint">Der Warenkorb ist leer</div>';
+          totalEUR.textContent = '€0.00';
+          return;
+        }
+
+        var byChild = new Map();
+        state.items.forEach(function (it, idx) {
+          var key = norm(it.childFirst) + '|' + norm(it.childLast);
+          if (!byChild.has(key))
+            byChild.set(key, {
+              first: it.childFirst,
+              last: it.childLast,
+              items: [],
+            });
+          byChild.get(key).items.push({
+            slot: String(it.slot || '').toLowerCase(),
+            idx: idx,
+          });
+        });
+
+        var childKeys = Array.from(byChild.keys());
+        var siblingKeys = new Set(childKeys.slice(1));
+        var totalChildren = byChild.size;
+
+        var fullDayDiscountPerIndex = new Map();
+        if (totalChildren === 1) {
+          var dayMap = new Map();
+          state.items.forEach(function (it, idx) {
+            var slot = String(it.slot || '').toLowerCase();
+            if (slot !== 'morning' && slot !== 'afternoon') return;
+            var periodLabel = getPeriodLabel(it).toLowerCase();
+            if (!periodLabel) return;
+            var info = dayMap.get(periodLabel) || {};
+            if (slot === 'morning' && info.morningIdx == null)
+              info.morningIdx = idx;
+            if (slot === 'afternoon' && info.afternoonIdx == null)
+              info.afternoonIdx = idx;
+            dayMap.set(periodLabel, info);
+          });
+          dayMap.forEach(function (info) {
+            if (info.morningIdx != null && info.afternoonIdx != null) {
+              fullDayDiscountPerIndex.set(
+                info.afternoonIdx,
+                Math.round(FULL_DAY_DISCOUNT_EUR * 100)
+              );
+            }
           });
         }
-        byChild
-          .get(key)
-          .items.push({ slot: String(it.slot || '').toLowerCase(), idx: idx });
-      });
 
-      var childKeys = Array.from(byChild.keys());
-      var siblingKeys = new Set(childKeys.slice(1)); // all except first child
-      var totalChildren = byChild.size;
+        var sum = 0;
 
-      // full day: map idx -> discount cents
-      var fullDayDiscountPerIndex = new Map();
+        cartList.innerHTML = state.items
+          .map(function (it, i) {
+            var childKey = norm(it.childFirst) + '|' + norm(it.childLast);
+            var isSibling = siblingKeys.has(childKey);
+            var applySiblingDiscount = totalChildren >= 2 && isSibling;
 
-      if (totalChildren === 1) {
-        var dayMap = new Map(); // periodLabel -> { morningIdx, afternoonIdx }
+            var amount = Number(it.amount || 0);
 
-        state.items.forEach(function (it, idx) {
-          var slot = String(it.slot || '').toLowerCase();
-          if (slot !== 'morning' && slot !== 'afternoon') return;
+            var labels = [];
 
-          var periodLabel = getPeriodLabel(it).toLowerCase();
-          if (!periodLabel) return;
+            if (applySiblingDiscount) {
+              amount = Math.round(amount * 0.9);
+              labels.push('−10% Geschwisterrabatt');
+            }
 
-          var info = dayMap.get(periodLabel) || {};
-          if (slot === 'morning' && info.morningIdx == null)
-            info.morningIdx = idx;
-          if (slot === 'afternoon' && info.afternoonIdx == null)
-            info.afternoonIdx = idx;
-          dayMap.set(periodLabel, info);
-        });
+            if (totalChildren === 1 && fullDayDiscountPerIndex.has(i)) {
+              var discountCents = fullDayDiscountPerIndex.get(i) || 0;
+              if (discountCents > 0) {
+                amount = Math.max(0, amount - discountCents);
+                labels.push('−' + FULL_DAY_DISCOUNT_EUR + ' € Ganztagsrabatt');
+              }
+            }
 
-        dayMap.forEach(function (info) {
-          if (info.morningIdx != null && info.afternoonIdx != null) {
-            fullDayDiscountPerIndex.set(
-              info.afternoonIdx,
-              Math.round(FULL_DAY_DISCOUNT_EUR * 100)
+            sum += amount;
+
+            var baseLabel = it.label || it.title || 'Camp';
+            var labelHtml = escapeHtml(baseLabel);
+
+            if (labels.length) {
+              labelHtml +=
+                ' <span class="rm-discount-label">' +
+                labels.join(', ') +
+                '</span>';
+            }
+
+            return (
+              '<div class="rm-d-row">' +
+              '<div>' +
+              '<div class="rm-d-title">' +
+              labelHtml +
+              '</div>' +
+              '<div class="rm-d-sub">Kind: ' +
+              (escapeHtml(it.childFirst) || '') +
+              ' ' +
+              (escapeHtml(it.childLast) || '') +
+              '</div>' +
+              '</div>' +
+              '<div>' +
+              '<div style="text-align:right; font-weight:500">' +
+              formatEUR(amount) +
+              '</div>' +
+              '<div style="text-align:right; margin-top:6px">' +
+              '<button class="rm-x" data-remove="' +
+              i +
+              '">✕</button>' +
+              '</div>' +
+              '</div>' +
+              '</div>'
             );
-          }
-        });
-      }
+          })
+          .join('');
 
-      var sum = 0;
+        totalEUR.textContent = formatEUR(sum);
 
-      dom.cartList.innerHTML = state.items
-        .map(function (it, i) {
-          var childKey = norm(it.childFirst) + '|' + norm(it.childLast);
-          var isSibling = siblingKeys.has(childKey);
-          var hasSiblingInCart = totalChildren >= 2;
-          var applySiblingDiscount = hasSiblingInCart && isSibling;
-
-          // base (full) amount in cents
-          var amount = Number(it.amount || 0);
-
-          // 1) sibling -10%
-          var hasSiblingDiscount = false;
-          if (applySiblingDiscount) {
-            amount = Math.round(amount * 0.9);
-            hasSiblingDiscount = true;
-          }
-
-          // 2) full-day -100€ for afternoon item
-          var hasFullDayDiscount = false;
-          if (totalChildren === 1 && fullDayDiscountPerIndex.has(i)) {
-            var discountCents = fullDayDiscountPerIndex.get(i) || 0;
-            amount = Math.max(0, amount - discountCents);
-            hasFullDayDiscount = discountCents > 0;
-          }
-
-          sum += amount;
-
-          var labels = [];
-          if (hasSiblingDiscount) labels.push('−10% Geschwisterrabatt');
-          if (hasFullDayDiscount)
-            labels.push('−' + FULL_DAY_DISCOUNT_EUR + ' € Ganztagsrabatt');
-
-          var baseLabel = it.label || it.title || 'Camp';
-          var labelHtml = escapeHtml(baseLabel);
-
-          if (labels.length) {
-            labelHtml +=
-              ' <span class="rm-discount-label">' +
-              labels.join(', ') +
-              '</span>';
-          }
-
-          return (
-            '' +
-            '<div class="rm-d-row">' +
-            '<div>' +
-            '<div class="rm-d-title">' +
-            labelHtml +
-            '</div>' +
-            '<div class="rm-d-sub">Kind: ' +
-            (escapeHtml(it.childFirst) || '') +
-            ' ' +
-            (escapeHtml(it.childLast) || '') +
-            '</div>' +
-            '</div>' +
-            '<div>' +
-            '<div style="text-align:right; font-weight:500">' +
-            formatEUR(amount) +
-            '</div>' +
-            '<div style="text-align:right; margin-top:6px">' +
-            '<button class="rm-x" data-remove="' +
-            i +
-            '">✕</button>' +
-            '</div>' +
-            '</div>' +
-            '</div>'
-          );
-        })
-        .join('');
-
-      dom.totalEUR.textContent = formatEUR(sum);
-
-      // remove handlers (bind to current visible list)
-      dom.cartList.querySelectorAll('[data-remove]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          var idx = +btn.getAttribute('data-remove');
-          window.CartStore.remove(idx);
+        cartList.querySelectorAll('[data-remove]').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            var idx = +btn.getAttribute('data-remove');
+            window.CartStore.remove(idx);
+          });
         });
       });
-    }
 
-    // ---------------------------
-    // Bind events to visible DOM (and rebind on resize/orientation)
-    // ---------------------------
-    function bind() {
-      var dom = resolveDom();
-      if (
-        !dom.drawer ||
-        !dom.fab ||
-        !dom.closeBtn ||
-        !dom.payBtn ||
-        !dom.parentEmail
-      ) {
-        return;
-      }
-
-      // avoid double-binding to same visible nodes
-      if (
-        lastBound &&
-        lastBound.drawer === dom.drawer &&
-        lastBound.fab === dom.fab &&
-        lastBound.closeBtn === dom.closeBtn &&
-        lastBound.payBtn === dom.payBtn
-      ) {
-        // still ensure visible drawer has correct state
-        render(window.CartStore);
-        return;
-      }
-      lastBound = dom;
-
-      // FAB open
-      dom.fab.addEventListener('click', function () {
-        dom.drawer.classList.add('open');
-      });
-
-      // close btn
-      dom.closeBtn.addEventListener('click', function () {
-        dom.drawer.classList.remove('open');
-      });
-
-      // open from camps
-      window.CartBus.addEventListener('cart:open', function () {
-        var d = resolveDom();
-        if (d.drawer) d.drawer.classList.add('open');
-      });
-
-      // click outside to close (use capture + resolve current)
-      document.addEventListener(
-        'click',
-        function (e) {
-          var d = resolveDom();
-          if (!d.drawer || !d.drawer.classList.contains('open')) return;
-          if (d.drawer.contains(e.target)) return;
-          if (e.target.closest && e.target.closest('#cartFab')) return;
-          if (e.target.closest && e.target.closest('[data-remove]')) return;
-          d.drawer.classList.remove('open');
-        },
-        true
-      );
-
-      // pay
-      dom.payBtn.addEventListener('click', function () {
-        var d = resolveDom();
+      // checkout (как у тебя)
+      payBtn.addEventListener('click', function () {
         var state = window.CartStore;
-        if (!state.items.length) {
-          alert('Der Einkaufswagen ist leer');
-          return;
-        }
+        if (!state.items.length) return alert('Der Einkaufswagen ist leer');
 
-        var email = (
-          d.parentEmail && d.parentEmail.value ? d.parentEmail.value : ''
-        ).trim();
-        if (!email) {
-          alert('Geben Sie Ihre E-Mail-Adresse');
-          return;
-        }
+        var email = (parentEmail.value || '').trim();
+        if (!email) return alert('Geben Sie Ihre E-Mail-Adresse');
 
-        // IMPORTANT: these checkboxes also duplicated -> pick visible by id
-        var agb = pickVisibleById('legalAgb');
-        var wid = pickVisibleById('legalWiderruf');
-        var dsg = pickVisibleById('legalDsgvo');
-
-        if (!agb || !wid || !dsg) {
-          alert('Bitte bestätigen Sie AGB/Widerruf/Datenschutz.');
-          return;
-        }
+        var agb = document.getElementById('legalAgb');
+        var wid = document.getElementById('legalWiderruf');
+        var dsg = document.getElementById('legalDsgvo');
+        if (!agb || !wid || !dsg)
+          return alert('Bitte bestätigen Sie AGB/Widerruf/Datenschutz.');
         if (!agb.checked || !wid.checked || !dsg.checked) {
-          alert(
+          return alert(
             'Bitte bestätigen Sie AGB, Widerrufsbelehrung und Datenschutzerklärung.'
           );
-          return;
         }
 
         state.setEmail(email);
 
-        d.payBtn.disabled = true;
-        d.payBtn.textContent = 'Checkout wird erstellt…';
+        payBtn.disabled = true;
+        payBtn.textContent = 'Checkout wird erstellt…';
 
         fetch(API_BASE + '/api/create-checkout-session', {
           method: 'POST',
@@ -414,44 +338,17 @@
               throw new Error('Es wurde keine Checkout-URL zurückgegeben.');
             window.location.href = data.url;
           })
-          .catch(function (err) {
-            console.error(err);
+          .catch(function () {
             alert('Die Zahlung konnte nicht erstellt werden.');
-            d.payBtn.disabled = false;
-            d.payBtn.textContent = 'Zur Zahlung fortfahren';
+            payBtn.disabled = false;
+            payBtn.textContent = 'Zur Zahlung fortfahren';
           });
       });
 
-      // make sure it's visible (if you use hidden class)
-      dom.drawer.classList.remove('rm-drawer--hidden');
-
-      // initial render into the now-correct DOM
-      render(window.CartStore);
+      drawer.classList.remove('rm-drawer--hidden');
     }
 
-    // expose rebind (so if you call init again, it rebinds instead of exiting)
-    window.__ClavisCartRebind = function () {
-      bind();
-    };
-
-    // subscribe render
-    window.CartStore.subscribe(function (state) {
-      render(state);
-    });
-
-    // initial bind after layout settles
-    setTimeout(bind, 0);
-
-    // rebind on resize/orientation (Readymag switches layouts)
-    var t = null;
-    function scheduleRebind() {
-      clearTimeout(t);
-      t = setTimeout(function () {
-        bind();
-      }, 120);
-    }
-    window.addEventListener('resize', scheduleRebind);
-    window.addEventListener('orientationchange', scheduleRebind);
+    waitForElements();
   }
 
   window.ClavisCartInit = function () {

@@ -29,38 +29,44 @@
       <div class="rm-legal">
         <label class="rm-check">
           <input type="checkbox" id="legalAgb" />
-          Ich habe die
-          <a
-            href="https://readymag.website/u612815371/5961069/agb"
-            target="_blank"
-            rel="noopener"
-            >Allgemeinen Geschäftsbedingungen (AGB)</a
-          >
-          gelesen und akzeptiere sie
+          <span>
+            Ich habe die
+            <a
+              href="https://readymag.website/u612815371/5961069/agb"
+              target="_blank"
+              rel="noopener"
+              >Allgemeinen Geschäftsbedingungen (AGB)</a
+            >
+            gelesen und akzeptiere sie
+          </span>
         </label>
 
         <label class="rm-check">
           <input type="checkbox" id="legalWiderruf" />
-          Ich habe die
-          <a
-            href="https://readymag.website/u612815371/5961069/widerrufsbelehrung"
-            target="_blank"
-            rel="noopener"
-            >Widerrufsbelehrung</a
+          <span
+            >Ich habe die
+            <a
+              href="https://readymag.website/u612815371/5961069/widerrufsbelehrung"
+              target="_blank"
+              rel="noopener"
+              >Widerrufsbelehrung</a
+            >
+            gelesen und zur Kenntnis genommen</span
           >
-          gelesen und zur Kenntnis genommen
         </label>
 
         <label class="rm-check">
           <input type="checkbox" id="legalDsgvo" />
-          Ich habe die
-          <a
-            href="https://readymag.website/u612815371/5961069/datenschutz"
-            target="_blank"
-            rel="noopener"
-            >Datenschutzerklärung</a
-          >
-          zur Kenntnis genommen
+          <span>
+            Ich habe die
+            <a
+              href="https://readymag.website/u612815371/5961069/datenschutz"
+              target="_blank"
+              rel="noopener"
+              >Datenschutzerklärung</a
+            >
+            zur Kenntnis genommen
+          </span>
         </label>
       </div>
 
@@ -113,7 +119,7 @@
   /* FAB всегда поверх */
   .rm-cart-fab {
     position: fixed !important;
-    top: 12px !important;
+    top: 4px !important;
     right: 16px !important;
     z-index: 2147483646 !important;
     display: flex;
@@ -140,7 +146,7 @@
     display: flex !important;
     flex-direction: column !important;
     overflow: hidden !important;
-    -webkit-overflow-scrolling: touch;
+    box-sizing: border-box;
   }
 
   .rm-drawer--hidden {
@@ -275,10 +281,11 @@
     display: flex;
     flex-direction: column;
     font-size: 10px;
+    gap: 6px;
   }
   .rm-check {
     display: flex;
-    align-items: center;
+    align-items: start;
     gap: 4px;
   }
   .rm-check input {
@@ -309,11 +316,18 @@
   /* mobile */
   @media (max-width: 768px) {
     .rm-drawer {
-      width: 100vw;
-      max-width: 100vw;
+      left: 0 !important;
+      right: 0 !important;
+
+      width: 100vw !important;
+      max-width: 100vw !important;
+      min-width: 100vw !important;
+
+      /* на всякий случай, чтобы padding не раздувал ширину */
+      box-sizing: border-box !important;
     }
     .rm-cart-fab {
-      top: 10px !important;
+      top: 4px !important;
       right: 10px !important;
     }
   }
