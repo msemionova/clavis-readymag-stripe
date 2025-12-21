@@ -37,6 +37,7 @@ select {
 }
 
 .season-bg,
-[data-id='693c29f5e2724635d9eeca58'] {
+[data-id='693c29f5e2724635d9eeca58'],
+[data-id='6948375716158d4b7b8e0ec2'] {
   background-color: var(--rm-season-bg) !important;
 }
