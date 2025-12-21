@@ -14,7 +14,6 @@
       var payBtn = document.getElementById('payBtn');
       var cartCountEl = document.getElementById('cartCount');
 
-      // ждём пока RM реально отрендерит DOM
       if (
         !drawer ||
         !fab ||
@@ -29,14 +28,12 @@
         return;
       }
 
-      // 🔥 КРИТИЧНО: вынести в body (вне RM transform/scale контейнеров)
       try {
         if (drawer.parentElement !== document.body)
           document.body.appendChild(drawer);
         if (fab.parentElement !== document.body) document.body.appendChild(fab);
       } catch (e) {}
 
-      // если уже инициализировали — просто выходим (НО после переноса!)
       if (window.CartStore) return;
 
       setup(
@@ -117,7 +114,19 @@
       window.CartStore = Store;
       window.CartBus = Bus;
 
-      // ---- helpers ----
+      try {
+        var params = new URLSearchParams(window.location.search);
+        if (params.get('paid') === '1') {
+          window.CartStore.clear();
+
+          // убираем paid=1 из URL, чтобы при обновлении не чистить снова
+          params.delete('paid');
+          var rest = params.toString();
+          var newUrl = window.location.pathname + (rest ? '?' + rest : '');
+          window.history.replaceState({}, '', newUrl);
+        }
+      } catch (e) {}
+
       function formatEUR(cents) {
         return '€' + (cents / 100).toFixed(2);
       }
@@ -136,7 +145,6 @@
           .replace(/'/g, '&#039;');
       }
 
-      // ---- open/close ----
       function openDrawer() {
         // на всякий случай повторно переносим в body при открытии
         try {
@@ -149,7 +157,6 @@
         drawer.classList.add('open');
         drawer.classList.remove('rm-drawer--hidden');
       }
-
       function closeDrawer() {
         drawer.classList.remove('open');
       }
@@ -164,7 +171,6 @@
       });
       window.CartBus.addEventListener('cart:open', openDrawer);
 
-      // close on outside click
       document.addEventListener('click', function (e) {
         if (!drawer.classList.contains('open')) return;
         if (drawer.contains(e.target)) return;
@@ -172,7 +178,6 @@
         closeDrawer();
       });
 
-      // ---- render (скидки тут как у тебя) ----
       window.CartStore.subscribe(function (state) {
         cartCountEl.textContent = String(state.items.length);
 
@@ -186,12 +191,13 @@
         var byChild = new Map();
         state.items.forEach(function (it, idx) {
           var key = norm(it.childFirst) + '|' + norm(it.childLast);
-          if (!byChild.has(key))
+          if (!byChild.has(key)) {
             byChild.set(key, {
               first: it.childFirst,
               last: it.childLast,
               items: [],
             });
+          }
           byChild.get(key).items.push({
             slot: String(it.slot || '').toLowerCase(),
             idx: idx,
@@ -203,13 +209,24 @@
         var totalChildren = byChild.size;
 
         var fullDayDiscountPerIndex = new Map();
+
         if (totalChildren === 1) {
-          var dayMap = new Map();
+          var dayMap = new Map(); // key -> { morningIdx, afternoonIdx }
+
           state.items.forEach(function (it, idx) {
             var slot = String(it.slot || '').toLowerCase();
             if (slot !== 'morning' && slot !== 'afternoon') return;
+
             var periodLabel = getPeriodLabel(it).toLowerCase();
+
+            // fallback: если periodLabel пустой, пытаемся группировать по productId (лучше чем ничего)
+            if (!periodLabel) {
+              var pid = String(it.productId || it.product_id || '').trim();
+              if (pid) periodLabel = ('pid:' + pid).toLowerCase();
+            }
+
             if (!periodLabel) return;
+
             var info = dayMap.get(periodLabel) || {};
             if (slot === 'morning' && info.morningIdx == null)
               info.morningIdx = idx;
@@ -217,6 +234,7 @@
               info.afternoonIdx = idx;
             dayMap.set(periodLabel, info);
           });
+
           dayMap.forEach(function (info) {
             if (info.morningIdx != null && info.afternoonIdx != null) {
               fullDayDiscountPerIndex.set(
@@ -236,14 +254,15 @@
             var applySiblingDiscount = totalChildren >= 2 && isSibling;
 
             var amount = Number(it.amount || 0);
-
             var labels = [];
 
+            // sibling −10%
             if (applySiblingDiscount) {
               amount = Math.round(amount * 0.9);
               labels.push('−10% Geschwisterrabatt');
             }
 
+            // full-day −100€
             if (totalChildren === 1 && fullDayDiscountPerIndex.has(i)) {
               var discountCents = fullDayDiscountPerIndex.get(i) || 0;
               if (discountCents > 0) {
@@ -259,8 +278,8 @@
 
             if (labels.length) {
               labelHtml +=
-                ' <span class="rm-discount-label">' +
-                labels.join(', ') +
+                ' <span class="rm-discount-label" style="display:inline; font-weight:500;">' +
+                escapeHtml(labels.join(', ')) +
                 '</span>';
             }
 
@@ -301,7 +320,7 @@
         });
       });
 
-      // checkout (как у тебя)
+      // checkout
       payBtn.addEventListener('click', function () {
         var state = window.CartStore;
         if (!state.items.length) return alert('Der Einkaufswagen ist leer');
@@ -334,8 +353,7 @@
             return r.json();
           })
           .then(function (data) {
-            if (!data.url)
-              throw new Error('Es wurde keine Checkout-URL zurückgegeben.');
+            if (!data.url) throw new Error('No checkout url');
             window.location.href = data.url;
           })
           .catch(function () {

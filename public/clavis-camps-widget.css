@@ -515,6 +515,11 @@
   .rm-season-tabs {
     padding: 0 14px;
     justify-content: space-between;
+    top: -100px;
+  }
+
+  .rm-list-wrapper {
+    max-height: 1000px;
   }
 
   /* заголовок: меньше, чтобы влезал */
