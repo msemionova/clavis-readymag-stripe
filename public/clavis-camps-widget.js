@@ -62,14 +62,26 @@
 
     function sortVariantsArr(arr) {
       arr.sort(function (a, b) {
-        var pa = a.periodLabel || '';
-        var pb = b.periodLabel || '';
+        // 1) по датам (periodLabel)
+        var pa = (a.periodLabel || '').toLowerCase();
+        var pb = (b.periodLabel || '').toLowerCase();
         if (pa < pb) return -1;
         if (pa > pb) return 1;
 
-        var sa = slotOrder(a.slot);
-        var sb = slotOrder(b.slot);
-        return sa - sb;
+        // 2) по стартовому времени из timeLabel (09:30-12:30)
+        var ta = parseStartMinutes(a.timeLabel);
+        var tb = parseStartMinutes(b.timeLabel);
+        if (ta != null && tb != null && ta !== tb) return ta - tb;
+        if (ta != null && tb == null) return -1;
+        if (ta == null && tb != null) return 1;
+
+        // 3) fallback: morning -> afternoon
+        var sa = slotOrder((a.slot || '').toLowerCase());
+        var sb = slotOrder((b.slot || '').toLowerCase());
+        if (sa !== sb) return sa - sb;
+
+        // 4) стабильность
+        return String(a.id || '').localeCompare(String(b.id || ''));
       });
     }
 
@@ -326,6 +338,11 @@
             };
           }
           courseMap[cKey].variants.push(it);
+        }
+
+        for (var sk = 0; sk < courseOrder.length; sk++) {
+          var ck = courseOrder[sk];
+          sortVariantsArr(courseMap[ck].variants);
         }
 
         // сортируем курсы внутри age-группы
